@@ -202,6 +202,10 @@ command = "hermes --yolo chat"
     );
     assert_eq!(resolved.gateway.metadata, Some(json!({ "team": "obs" })));
     assert_eq!(
+        resolved.gateway.plugin_config,
+        Some(json!({ "components": [] }))
+    );
+    assert_eq!(
         resolved.agents.codex.command.as_deref(),
         Some("codex --approval-mode never")
     );
@@ -210,6 +214,258 @@ command = "hermes --yolo chat"
         Some("hermes --yolo chat")
     );
     assert!(!resolved.agents.cursor.patch_restore_hooks);
+}
+
+#[test]
+fn explicit_plugin_toml_maps_root_plugin_config() {
+    let temp = tempfile::tempdir().unwrap();
+    let config_path = temp.path().join("config.toml");
+    std::fs::write(
+        &config_path,
+        r#"
+[upstream]
+openai_base_url = "http://openai"
+"#,
+    )
+    .unwrap();
+    std::fs::write(
+        temp.path().join("plugin.toml"),
+        r#"
+version = 1
+
+[[components]]
+kind = "observability"
+enabled = true
+
+[components.config]
+version = 1
+
+[components.config.atof]
+enabled = true
+output_directory = "atof"
+filename = "events.jsonl"
+mode = "overwrite"
+"#,
+    )
+    .unwrap();
+    let command = RunCommand {
+        agent: Some(CodingAgent::Codex),
+        config: Some(config_path),
+        openai_base_url: None,
+        anthropic_base_url: None,
+        atif_dir: None,
+        atof_dir: None,
+        openinference_endpoint: None,
+        session_metadata: None,
+        plugin_config: None,
+        dry_run: false,
+        print: false,
+        command: vec!["codex".into()],
+    };
+
+    let resolved = resolve_run_config(&command, None).unwrap();
+
+    assert_eq!(
+        resolved.gateway.plugin_config,
+        Some(json!({
+            "version": 1,
+            "components": [
+                {
+                    "kind": "observability",
+                    "enabled": true,
+                    "config": {
+                        "version": 1,
+                        "atof": {
+                            "enabled": true,
+                            "output_directory": "atof",
+                            "filename": "events.jsonl",
+                            "mode": "overwrite"
+                        }
+                    }
+                }
+            ]
+        }))
+    );
+}
+
+#[test]
+fn plugin_toml_path_resolution_tracks_config_scope() {
+    let temp = tempfile::tempdir().unwrap();
+    let explicit = temp.path().join("custom-config.toml");
+    assert_eq!(
+        plugin_config_paths(Some(&explicit)),
+        vec![temp.path().join("plugin.toml")]
+    );
+
+    let project = temp.path().join("workspace");
+    let nested = project.join("a/b/c");
+    std::fs::create_dir_all(project.join(".nemo-flow")).unwrap();
+    std::fs::create_dir_all(&nested).unwrap();
+    let plugin_path = project.join(".nemo-flow/plugin.toml");
+    std::fs::write(&plugin_path, "version = 1").unwrap();
+    let user_config = temp.path().join("xdg/nemo-flow");
+
+    assert_eq!(find_project_plugin_config(&nested), Some(plugin_path));
+    assert_eq!(
+        implicit_plugin_config_paths(Some(&nested), Some(user_config.clone())),
+        vec![
+            PathBuf::from("/etc/nemo-flow/plugin.toml"),
+            project.join(".nemo-flow/plugin.toml"),
+            user_config.join("plugin.toml"),
+        ]
+    );
+}
+
+#[test]
+fn discovered_plugin_toml_upserts_components_by_kind() {
+    let temp = tempfile::tempdir().unwrap();
+    let project_plugin = temp.path().join("project-plugin.toml");
+    let user_plugin = temp.path().join("user-plugin.toml");
+    std::fs::write(
+        &project_plugin,
+        r#"
+version = 1
+
+[[components]]
+kind = "observability"
+enabled = true
+
+[components.config]
+version = 1
+
+[components.config.atof]
+enabled = true
+filename = "project.jsonl"
+
+[[components]]
+kind = "adaptive"
+enabled = true
+
+[components.config]
+mode = "project-only"
+"#,
+    )
+    .unwrap();
+    std::fs::write(
+        &user_plugin,
+        r#"
+version = 1
+
+[[components]]
+kind = "observability"
+enabled = true
+
+[components.config]
+version = 1
+
+[components.config.atof]
+enabled = true
+
+[components.config.atif]
+enabled = true
+filename_template = "user-{session_id}.json"
+
+[[components]]
+kind = "custom"
+enabled = true
+
+[components.config]
+source = "user"
+"#,
+    )
+    .unwrap();
+
+    let resolved = load_plugin_toml_config_from_paths(vec![project_plugin, user_plugin]).unwrap();
+
+    assert_eq!(
+        resolved.map(|config| config.value),
+        Some(json!({
+            "version": 1,
+            "components": [
+                {
+                    "kind": "observability",
+                    "enabled": true,
+                    "config": {
+                        "version": 1,
+                        "atof": {
+                            "enabled": true,
+                            "filename": "project.jsonl"
+                        },
+                        "atif": {
+                            "enabled": true,
+                            "filename_template": "user-{session_id}.json"
+                        }
+                    }
+                },
+                {
+                    "kind": "adaptive",
+                    "enabled": true,
+                    "config": {
+                        "mode": "project-only"
+                    }
+                },
+                {
+                    "kind": "custom",
+                    "enabled": true,
+                    "config": {
+                        "source": "user"
+                    }
+                }
+            ]
+        }))
+    );
+}
+
+#[test]
+fn plugin_toml_conflicts_with_config_toml_plugins_config() {
+    let temp = tempfile::tempdir().unwrap();
+    let config_path = temp.path().join("config.toml");
+    std::fs::write(
+        &config_path,
+        r#"
+[plugins]
+config = { version = 1, components = [] }
+"#,
+    )
+    .unwrap();
+    std::fs::write(temp.path().join("plugin.toml"), "version = 1\n").unwrap();
+    let args = ServerArgs {
+        config: Some(config_path),
+        ..ServerArgs::default()
+    };
+
+    let error = resolve_server_config(&args).unwrap_err().to_string();
+
+    assert!(error.contains("plugin config is defined in both"));
+    assert!(error.contains("config.toml"));
+    assert!(error.contains("plugin.toml"));
+}
+
+#[test]
+fn cli_plugin_config_conflicts_with_file_plugin_config() {
+    let temp = tempfile::tempdir().unwrap();
+    let config_path = temp.path().join("config.toml");
+    std::fs::write(&config_path, "").unwrap();
+    std::fs::write(temp.path().join("plugin.toml"), "version = 1\n").unwrap();
+    let command = RunCommand {
+        agent: Some(CodingAgent::Codex),
+        config: Some(config_path),
+        openai_base_url: None,
+        anthropic_base_url: None,
+        atif_dir: None,
+        atof_dir: None,
+        openinference_endpoint: None,
+        session_metadata: None,
+        plugin_config: Some(r#"{"version":1,"components":[]}"#.into()),
+        dry_run: false,
+        print: false,
+        command: vec!["codex".into()],
+    };
+
+    let error = resolve_run_config(&command, None).unwrap_err().to_string();
+
+    assert!(error.contains("--plugin-config"));
+    assert!(error.contains("file configuration"));
 }
 
 #[test]
@@ -293,6 +549,35 @@ openai_base_url = "http://file-openai"
 }
 
 #[test]
+fn run_plugin_config_overrides_inherited_top_level_plugin_config() {
+    let server = ServerArgs {
+        plugin_config: Some(r#"{"components":["top-level"]}"#.into()),
+        ..ServerArgs::default()
+    };
+    let command = RunCommand {
+        agent: Some(CodingAgent::Codex),
+        config: None,
+        openai_base_url: None,
+        anthropic_base_url: None,
+        atif_dir: None,
+        atof_dir: None,
+        openinference_endpoint: None,
+        session_metadata: None,
+        plugin_config: Some(r#"{"components":["run"]}"#.into()),
+        dry_run: false,
+        print: false,
+        command: vec!["codex".into()],
+    };
+
+    let resolved = resolve_run_config(&command, Some(&server)).unwrap();
+
+    assert_eq!(
+        resolved.gateway.plugin_config,
+        Some(json!({ "components": ["run"] }))
+    );
+}
+
+#[test]
 fn server_resolution_applies_all_server_overrides() {
     let args = ServerArgs {
         config: None,
@@ -302,6 +587,7 @@ fn server_resolution_applies_all_server_overrides() {
         atif_dir: Some(PathBuf::from("cli-atif")),
         atof_dir: None,
         openinference_endpoint: Some("http://cli-otel".into()),
+        plugin_config: Some(r#"{"version":1,"components":[]}"#.into()),
     };
 
     let resolved = resolve_server_config(&args).unwrap();
@@ -317,6 +603,11 @@ fn server_resolution_applies_all_server_overrides() {
         resolved.gateway.exporters.openinference.endpoint.as_deref(),
         Some("http://cli-otel")
     );
+    assert_eq!(
+        resolved.gateway.plugin_config,
+        Some(json!({ "version": 1, "components": [] }))
+    );
+    assert!(args.requested_daemon_mode());
 }
 
 #[test]
@@ -379,6 +670,18 @@ fn malformed_shared_config_reports_context() {
     let error = resolve_server_config(&args).unwrap_err().to_string();
 
     assert!(error.contains("invalid gateway configuration shape"));
+
+    let plugin_config = temp.path().join("config-with-invalid-plugin.toml");
+    std::fs::write(&plugin_config, "").unwrap();
+    std::fs::write(temp.path().join("plugin.toml"), "version = [").unwrap();
+    let args = ServerArgs {
+        config: Some(plugin_config),
+        ..ServerArgs::default()
+    };
+
+    let error = resolve_server_config(&args).unwrap_err().to_string();
+
+    assert!(error.contains("invalid plugin TOML"));
 }
 
 #[test]

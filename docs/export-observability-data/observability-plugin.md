@@ -59,6 +59,109 @@ names from the plugin namespace:
 The active runtime names include the component namespace prefix used by the
 plugin system.
 
+## CLI Gateway `plugin.toml`
+
+The `nemo-flow` CLI gateway can activate one process-level plugin config at
+startup. Define it with one of these sources:
+
+- `--plugin-config` JSON on the command line.
+- `[plugins].config` in `config.toml`.
+- `plugin.toml` next to the resolved `config.toml`, or in the same discovered
+  system, project, and user scopes as `config.toml`.
+
+When multiple discovered `plugin.toml` files are present, the gateway loads
+them from lowest to highest precedence:
+
+1. System: `/etc/nemo-flow/plugin.toml`
+2. Project: `.nemo-flow/plugin.toml`
+3. User: `$XDG_CONFIG_HOME/nemo-flow/plugin.toml`, or
+   `~/.config/nemo-flow/plugin.toml`
+
+Later files override earlier files. TOML tables merge recursively, so a
+higher-precedence file can override one nested key while preserving sibling
+keys from lower-precedence files.
+
+The top-level `[[components]]` array is merged by component `kind`. A
+higher-precedence component with the same `kind` is merged into the lower
+precedence component, and higher-precedence values win on conflicts. Components
+with different `kind` values compose, so a project `observability` component and
+a user `adaptive` component are both active in the effective config.
+
+Use only one source for plugin config. The gateway reports an error when
+`plugin.toml`, `[plugins].config`, or `--plugin-config` are used together.
+
+`plugin.toml` uses the generic plugin config shape at the file root. The
+example below shows every observability section; include only the sections you
+want to configure. Missing sections behave like disabled sections.
+
+`version = 1` is recommended for clarity but not required. The root plugin
+config version and observability component config version both default to `1`
+when omitted; unsupported non-`1` versions fail validation by default.
+
+```toml
+version = 1
+
+[[components]]
+kind = "observability"
+enabled = true
+
+[components.config]
+version = 1
+
+[components.config.atof]
+enabled = true
+output_directory = "logs"
+filename = "events.jsonl"
+mode = "overwrite"
+
+[components.config.atif]
+enabled = true
+output_directory = "logs"
+filename_template = "trajectory-{session_id}.json"
+
+[components.config.opentelemetry]
+enabled = true
+transport = "http_binary"
+endpoint = "http://localhost:4318/v1/traces"
+service_name = "nemo-flow"
+service_namespace = "agent"
+service_version = "0.2.0"
+instrumentation_scope = "nemo-flow-observability"
+timeout_millis = 3000
+
+[components.config.opentelemetry.headers]
+authorization = "Bearer <token>"
+
+[components.config.opentelemetry.resource_attributes]
+"deployment.environment" = "dev"
+"service.instance.id" = "local"
+
+[components.config.openinference]
+enabled = true
+transport = "http_binary"
+endpoint = "http://localhost:6006/v1/traces"
+service_name = "nemo-flow"
+service_namespace = "agent"
+service_version = "0.2.0"
+instrumentation_scope = "nemo-flow-openinference"
+timeout_millis = 3000
+
+[components.config.openinference.headers]
+authorization = "Bearer <token>"
+
+[components.config.openinference.resource_attributes]
+"deployment.environment" = "dev"
+"service.instance.id" = "local"
+
+[components.config.policy]
+unknown_component = "warn"
+unknown_field = "warn"
+unsupported_value = "error"
+```
+
+The file format is generic. Other plugin kinds can use the same `components`
+array when their plugin implementation is registered in the gateway process.
+
 ## ATOF Section
 
 Use ATOF when you want the raw ATOF `0.1` event stream as JSONL.
