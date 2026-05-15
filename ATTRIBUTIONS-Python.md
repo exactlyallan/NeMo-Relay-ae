@@ -642,7 +642,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-## anthropic (0.101.0)
+## anthropic (0.102.0)
 
 ### Licenses
 License: `MIT`
@@ -3794,7 +3794,7 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ```
 
-## langchain (1.2.18)
+## langchain (1.3.0)
 
 ### Licenses
 License: `MIT`
@@ -3854,7 +3854,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-## langchain-core (1.3.3)
+## langchain-core (1.4.0)
 
 ### Licenses
 License: `MIT`
@@ -3954,7 +3954,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-## langgraph (1.1.10)
+## langgraph (1.2.0)
 
 ### Licenses
 License: `MIT`
@@ -3984,7 +3984,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-## langgraph-checkpoint (4.0.3)
+## langgraph-checkpoint (4.1.0)
 
 ### Licenses
 License: `MIT`
@@ -4014,7 +4014,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-## langgraph-prebuilt (1.0.13)
+## langgraph-prebuilt (1.1.0)
 
 ### Licenses
 License: `MIT`
@@ -9007,7 +9007,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-## urllib3 (2.6.3)
+## urllib3 (2.7.0)
 
 ### Licenses
 License: `MIT`
