@@ -6,7 +6,7 @@ use std::sync::{Arc, Mutex};
 use async_stream::stream;
 use axum::body::{Body, Bytes};
 use axum::extract::State;
-use axum::http::{HeaderMap, HeaderName, Method, Request, Response, StatusCode};
+use axum::http::{HeaderMap, HeaderName, HeaderValue, Method, Request, Response, StatusCode};
 use futures_util::StreamExt;
 use nemo_flow::api::llm::{
     LlmCallExecuteParams, LlmRequest, LlmStreamCallExecuteParams, llm_call_execute,
@@ -303,7 +303,7 @@ fn build_buffered_func(
     let body_bytes = prepared.body_bytes.clone();
     let headers = prepared.headers.clone();
     let route = prepared.provider;
-    Arc::new(move |_request| {
+    Arc::new(move |request| {
         let http = http.clone();
         let method = method.clone();
         let url = url.clone();
@@ -313,17 +313,24 @@ fn build_buffered_func(
         let upstream_error = upstream_error.clone();
         let response_bytes = response_bytes.clone();
         Box::pin(async move {
-            let response =
-                match forward_upstream_request(&http, &method, &url, &body_bytes, &headers, route)
-                    .await
-                {
-                    Ok(response) => response,
-                    Err(error) => {
-                        let message = error.to_string();
-                        *upstream_error.lock().expect("upstream error lock poisoned") = Some(error);
-                        return Err(FlowError::Internal(message));
-                    }
-                };
+            let response = match forward_upstream_request(
+                &http,
+                &method,
+                &url,
+                &body_bytes,
+                &headers,
+                Some(&request),
+                route,
+            )
+            .await
+            {
+                Ok(response) => response,
+                Err(error) => {
+                    let message = error.to_string();
+                    *upstream_error.lock().expect("upstream error lock poisoned") = Some(error);
+                    return Err(FlowError::Internal(message));
+                }
+            };
             let status = response.status();
             let response_headers = response_headers(response.headers());
             let bytes = match response.bytes().await {
@@ -454,7 +461,7 @@ fn build_streaming_func(
     let body_bytes = prepared.body_bytes.clone();
     let headers = prepared.headers.clone();
     let route = prepared.provider;
-    Arc::new(move |_request| {
+    Arc::new(move |request| {
         let http = http.clone();
         let method = method.clone();
         let url = url.clone();
@@ -463,17 +470,24 @@ fn build_streaming_func(
         let upstream_info = upstream_info.clone();
         let upstream_error = upstream_error.clone();
         Box::pin(async move {
-            let response =
-                match forward_upstream_request(&http, &method, &url, &body_bytes, &headers, route)
-                    .await
-                {
-                    Ok(response) => response,
-                    Err(error) => {
-                        let message = error.to_string();
-                        *upstream_error.lock().expect("upstream error lock poisoned") = Some(error);
-                        return Err(FlowError::Internal(message));
-                    }
-                };
+            let response = match forward_upstream_request(
+                &http,
+                &method,
+                &url,
+                &body_bytes,
+                &headers,
+                Some(&request),
+                route,
+            )
+            .await
+            {
+                Ok(response) => response,
+                Err(error) => {
+                    let message = error.to_string();
+                    *upstream_error.lock().expect("upstream error lock poisoned") = Some(error);
+                    return Err(FlowError::Internal(message));
+                }
+            };
             let status = response.status();
             let response_headers = response_headers(response.headers());
             *upstream_info.lock().expect("upstream info lock poisoned") =
@@ -657,9 +671,11 @@ async fn forward_upstream_request(
     url: &str,
     body_bytes: &Bytes,
     headers: &HeaderMap,
+    effective_request: Option<&LlmRequest>,
     route: ProviderRoute,
 ) -> Result<reqwest::Response, reqwest::Error> {
-    let sanitized = gateway_forward_headers(headers, route);
+    let (body_bytes, headers) = effective_upstream_request(body_bytes, headers, effective_request);
+    let sanitized = strip_replaceable_agent_auth_headers(&headers, route);
     let mut upstream = http.request(method.clone(), url).body(body_bytes.clone());
     for (name, value) in &sanitized {
         if should_forward_request_header(name) {
@@ -668,6 +684,49 @@ async fn forward_upstream_request(
     }
     upstream = inject_provider_auth(upstream, route, &sanitized);
     upstream.send().await
+}
+
+fn effective_upstream_request(
+    body_bytes: &Bytes,
+    headers: &HeaderMap,
+    effective_request: Option<&LlmRequest>,
+) -> (Bytes, HeaderMap) {
+    let Some(request) = effective_request else {
+        return (body_bytes.clone(), headers.clone());
+    };
+
+    let body_bytes = if request.content.is_null() {
+        body_bytes.clone()
+    } else {
+        match serde_json::to_vec(&request.content) {
+            Ok(serialized) => Bytes::from(serialized),
+            Err(error) => {
+                eprintln!(
+                    "nemo-flow CLI gateway: failed to serialize rewritten LLM request body; forwarding original request: {error}"
+                );
+                return (body_bytes.clone(), headers.clone());
+            }
+        }
+    };
+    let mut headers = headers.clone();
+    for (name, value) in &request.headers {
+        let Ok(name) = HeaderName::from_bytes(name.as_bytes()) else {
+            continue;
+        };
+        let Some(value) = json_header_value(value) else {
+            continue;
+        };
+        headers.insert(name, value);
+    }
+    (body_bytes, headers)
+}
+
+fn json_header_value(value: &Value) -> Option<HeaderValue> {
+    let rendered = match value {
+        Value::String(value) => value.clone(),
+        value => serde_json::to_string(value).ok()?,
+    };
+    HeaderValue::from_str(&rendered).ok()
 }
 
 // If the inbound request has no provider auth header (Authorization / x-api-key / api-key), read
@@ -739,6 +798,7 @@ async fn passthrough_streaming(
         &prepared.upstream_url,
         &prepared.body_bytes,
         &prepared.headers,
+        None,
         prepared.provider,
     )
     .await?;
@@ -795,7 +855,7 @@ pub(crate) async fn models(
         .unwrap_or(parts.uri.path());
     let upstream_url = gateway_upstream_url_override(provider, &parts.headers, path_and_query)
         .unwrap_or_else(|| provider.upstream_url(&state.config, path_and_query));
-    let sanitized = gateway_forward_headers(&parts.headers, provider);
+    let sanitized = strip_replaceable_agent_auth_headers(&parts.headers, provider);
     let mut upstream = state.http.get(upstream_url);
     for (name, value) in &sanitized {
         if should_forward_request_header(name) {
@@ -931,18 +991,18 @@ fn gateway_upstream_url_override_with_openai_key_state(
     )
 }
 
-// Lets alignment adapters normalize agent-native credentials before the gateway injects standard
-// provider API keys. Whitespace-only env vars are treated as missing because forwarding an empty
-// bearer value only replaces one authentication failure with another.
-fn gateway_forward_headers(headers: &HeaderMap, route: ProviderRoute) -> HeaderMap {
-    gateway_forward_headers_with_openai_key_state(
+// Lets alignment adapters strip agent-native credentials only when the gateway can replace them
+// with standard provider API keys. Whitespace-only env vars are treated as missing because
+// forwarding an empty bearer value only replaces one authentication failure with another.
+fn strip_replaceable_agent_auth_headers(headers: &HeaderMap, route: ProviderRoute) -> HeaderMap {
+    strip_replaceable_agent_auth_headers_with_openai_key_state(
         headers,
         route,
         env_var_is_nonempty("OPENAI_API_KEY"),
     )
 }
 
-fn gateway_forward_headers_with_openai_key_state(
+fn strip_replaceable_agent_auth_headers_with_openai_key_state(
     headers: &HeaderMap,
     route: ProviderRoute,
     has_openai_replacement_key: bool,
