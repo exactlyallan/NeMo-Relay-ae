@@ -11,7 +11,7 @@ surface.
 
 Supported integrations are end-user entry points. They use public framework or
 plugin APIs where available and document the support level for observability,
-security middleware, and adaptive optimization.
+security middleware, and optimization features.
 
 ## Support Matrix
 

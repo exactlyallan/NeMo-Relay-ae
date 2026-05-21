@@ -25,7 +25,7 @@ The plugin can coordinate:
 ## Use Adaptive When
 
 Adaptive is useful when an agent workflow repeats similar work and you want to
-observe or tune behavior without hard-coding optimization logic into every
+observe or tune behavior without hard-coding tuning logic into every
 application.
 
 Start here when you need to:
@@ -35,7 +35,7 @@ Start here when you need to:
 - Plan prompt-cache breakpoints for supported providers.
 - Evaluate tool parallelism opportunities.
 - Share adaptive state across workers when needed.
-- Roll out optimization as a configuration change.
+- Roll out measured tuning as a configuration change.
 
 If instrumentation is not in place yet, start with
 [Instrument Applications](../../instrument-applications/about.md) or
