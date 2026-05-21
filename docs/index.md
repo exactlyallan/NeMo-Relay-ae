@@ -5,7 +5,7 @@ SPDX-License-Identifier: Apache-2.0
 
 # Overview
 
-NeMo Flow is a portable execution runtime for agent systems that already have a
+NeMo Relay is a portable execution runtime for agent systems that already have a
 framework, model provider, policy layer, or observability backend. It gives those
 systems one consistent way to describe what is happening when an agent crosses a
 request, tool, or LLM boundary.
@@ -13,9 +13,9 @@ request, tool, or LLM boundary.
 That layer is useful because agent applications rarely live inside one clean
 abstraction. A production stack might combine NeMo Agent Toolkit, LangChain,
 LangGraph, provider SDKs, custom harness code, NeMo Guardrails, tracing systems,
-and evaluation pipelines. NeMo Flow sits underneath those choices as the shared
+and evaluation pipelines. NeMo Relay sits underneath those choices as the shared
 runtime contract for scopes, middleware, plugins, lifecycle events, adaptive
-behavior, and observability. Under the NeMo Flow scope stack and middleware, the scoped execution path is referred to as work.
+behavior, and observability. Under the NeMo Relay scope stack and middleware, the scoped execution path is referred to as work.
 
 The result is a framework-neutral substrate for agent execution. Applications
 keep their orchestration model, providers keep their native clients, and
@@ -24,7 +24,7 @@ adaptive behavior across Rust, Python, and Node.js.
 
 ## Benefits
 
-NeMo Flow is designed for teams that need agent runtime behavior to stay
+NeMo Relay is designed for teams that need agent runtime behavior to stay
 consistent as applications grow across frameworks, languages, and deployment
 targets.
 
@@ -42,7 +42,7 @@ targets.
   lifecycle stream in-process or translate it to Agent Trajectory Interchange
   Format (ATIF) trajectories, OpenTelemetry traces, and OpenInference-compatible
   traces for debugging, evaluation, and production observability.
-- **Adopt without replacing the stack**: NeMo Flow can sit below NeMo ecosystem
+- **Adopt without replacing the stack**: NeMo Relay can sit below NeMo ecosystem
   components, third-party agent frameworks, provider adapters, or direct
   application code, so teams can add shared runtime semantics without a
   framework migration.
@@ -59,13 +59,12 @@ Use the reading path that matches your task:
 |---|---|
 | Run a minimal example | [Quick Start](getting-started/quick-start.md) |
 | Install packages | [Installation](getting-started/installation.md) |
-| Adopt from existing callbacks, traces, or custom harnesses | [Migration Paths](getting-started/migration.md) |
 | Develop from source | [Development Setup](contribute/development-setup.md) |
 | Understand the runtime model | [Concepts](about/concepts/index.md) |
 | Instrument an application | [Instrument Applications](instrument-applications/about.md) |
 | Use a maintained integration | [Supported Integrations](integrations/about.md) |
 | Integrate a framework | [Integrate into Frameworks](integrate-frameworks/about.md) |
-| Observe a local coding-agent CLI | [NeMo Flow CLI](nemo-flow-cli/about.md) |
+| Observe a local coding-agent CLI | [NeMo Relay CLI](nemo-relay-cli/about.md) |
 | Package reusable behavior | [Build Plugins](build-plugins/about.md) |
 | Export traces or trajectories | [Observability](plugins/observability/about.md) |
 | Tune performance with adaptive behavior | [Adaptive](plugins/adaptive/about.md) |
@@ -129,7 +128,7 @@ flowchart TB
 
 ```{toctree}
 :hidden:
-:caption: About NeMo Flow
+:caption: About NeMo Relay
 :maxdepth: 2
 
 Overview <self>
@@ -147,21 +146,20 @@ about/release-notes/index
 getting-started/prerequisites
 getting-started/installation
 Configuration / Setup <getting-started/configuration>
-Migration Paths <getting-started/migration>
 Quick Start <getting-started/quick-start>
 ```
 
 ```{toctree}
 :hidden:
-:caption: NeMo Flow CLI
+:caption: NeMo Relay CLI
 :maxdepth: 2
 
-About <nemo-flow-cli/about>
-Basic Usage <nemo-flow-cli/basic-usage>
-Claude Code <nemo-flow-cli/claude-code>
-Codex <nemo-flow-cli/codex>
-Cursor <nemo-flow-cli/cursor>
-Hermes Agent <nemo-flow-cli/hermes>
+About <nemo-relay-cli/about>
+Basic Usage <nemo-relay-cli/basic-usage>
+Claude Code <nemo-relay-cli/claude-code>
+Codex <nemo-relay-cli/codex>
+Cursor <nemo-relay-cli/cursor>
+Hermes Agent <nemo-relay-cli/hermes>
 ```
 
 ```{toctree}
