@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: Copyright (c) 2026, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
+use std::ffi::OsString;
 use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
@@ -36,17 +37,40 @@ static GENERIC_TEST_PLUGIN_REGISTRATIONS: AtomicUsize = AtomicUsize::new(0);
 static GENERIC_TEST_PLUGIN_DEREGISTRATIONS: AtomicUsize = AtomicUsize::new(0);
 
 struct EnvVarGuard {
+    _guard: std::sync::MutexGuard<'static, ()>,
     key: &'static str,
-    old: Option<String>,
+    old: Option<OsString>,
 }
 
 impl EnvVarGuard {
     fn set(key: &'static str, value: &str) -> Self {
-        let old = std::env::var(key).ok();
+        let guard = crate::test_support::ENV_TEST_LOCK
+            .lock()
+            .unwrap_or_else(|error| error.into_inner());
+        let old = std::env::var_os(key);
         unsafe {
             std::env::set_var(key, value);
         }
-        Self { key, old }
+        Self {
+            _guard: guard,
+            key,
+            old,
+        }
+    }
+
+    fn remove(key: &'static str) -> Self {
+        let guard = crate::test_support::ENV_TEST_LOCK
+            .lock()
+            .unwrap_or_else(|error| error.into_inner());
+        let old = std::env::var_os(key);
+        unsafe {
+            std::env::remove_var(key);
+        }
+        Self {
+            _guard: guard,
+            key,
+            old,
+        }
     }
 }
 
@@ -226,6 +250,31 @@ async fn serve_listener_honors_plugin_idle_timeout_env() {
         .expect("plugin idle timeout should stop the sidecar")
         .unwrap();
     result.unwrap();
+}
+
+#[tokio::test]
+async fn plugin_idle_timeout_parses_absent_invalid_zero_and_positive_values() {
+    let _guard = PLUGIN_CONFIG_TEST_LOCK.lock().await;
+
+    let key = "NEMO_RELAY_PLUGIN_IDLE_TIMEOUT_SECS";
+    let removed = EnvVarGuard::remove(key);
+    assert_eq!(plugin_idle_timeout(), None);
+    drop(removed);
+
+    let invalid = EnvVarGuard::set(key, "not-a-number");
+    assert_eq!(plugin_idle_timeout(), None);
+    drop(invalid);
+
+    let zero = EnvVarGuard::set(key, "0");
+    assert_eq!(plugin_idle_timeout(), None);
+    drop(zero);
+
+    let positive = EnvVarGuard::set(key, "2");
+    assert_eq!(
+        plugin_idle_timeout(),
+        Some(std::time::Duration::from_secs(2))
+    );
+    drop(positive);
 }
 
 #[tokio::test]
