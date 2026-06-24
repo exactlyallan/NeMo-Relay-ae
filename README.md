@@ -49,7 +49,7 @@ through Relay, and check that Relay wrote both raw events and normalized
 trajectories.
 
 
-### 1. Install the CLI
+#### 1. Install the CLI
 
 ```bash
 cargo install nemo-relay-cli
@@ -61,7 +61,7 @@ If using `cargo-binstall`, the CLI can also be installed with:
 cargo binstall nemo-relay-cli
 ```
 
-### 2. Enable Local Observability Output
+#### 2. Enable Local Observability Output
 
 From the project directory ready to be observed, open the project-scoped plugin
 editor:
@@ -89,10 +89,10 @@ The editor creates or updates the nearest project plugin file at
 5. Press `s` to save.
 
 > [!NOTE]
-> Use `nemo-relay plugins edit` WITHOUT `--project` if needing to use these
+> Use `nemo-relay plugins edit` _without_ `--project` only if needing to use these
 > exporter settings in a user-level Relay config instead of a specific project.
 
-### 3. Run Codex or Claude Code Through Relay
+#### 3. Run Codex or Claude Code Through Relay
 
 Use either host CLI that is installed on a machine. For example:
 
@@ -116,7 +116,7 @@ when the agent exits.
 > Refer to the [Codex CLI guide](https://docs.nvidia.com/nemo/relay/nemo-relay-cli/codex) for the
 > current hook activation caveat and troubleshooting steps.
 
-### 4. Verify the Run
+#### 4. Verify the Run
 
 After the run exits, check that raw events and trajectory files were written.
 If the optionally set output directory and file name were used:
@@ -160,17 +160,17 @@ A successful run creates several outputs to inspect:
 > isn't flowing through the Relay gateway. If ATIF is missing, make sure the
 > agent session or turn ended and the output directory is writable.
 
-> [!TIP]
-> Use [NeMo Relay CLI](https://docs.nvidia.com/nemo/relay/nemo-relay-cli/about) when ready for
-> persistent host plugin installation, gateway configuration, exporter options,
-> and agent-specific diagnostics.
+#### Next Steps
+
+Go to the full [NeMo Relay CLI](https://docs.nvidia.com/nemo/relay/nemo-relay-cli/about) docs for
+persistent host plugin installation, gateway configuration, exporter options,
+and agent-specific diagnostics.
 
 > [!TIP]
 > Start by trusting the raw Agent Trajectory Observability Format (ATOF) JSONL.
 > It shows the lifecycle events Relay actually captured before anything is
 > translated into Agent Trajectory Interchange Format (ATIF), OpenTelemetry, or
 > OpenInference output.
-
 
 ## Quick Start Applications
 
