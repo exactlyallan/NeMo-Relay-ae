@@ -14,6 +14,8 @@ and collision-resistant when exported outside this repository.
 Consumer skill names use task-oriented groups:
 
 - `nemo-relay-get-*` for onboarding and first-success workflows.
+- `nemo-relay-install*` for package, CLI, and integration installation
+  workflows before runtime setup begins.
 - `nemo-relay-instrument-*` for application instrumentation, execution
   boundaries, scope context, typed wrappers, and call wrapping.
 - `nemo-relay-plugin-*` for built-in plugin configuration, plugin authoring,
@@ -29,6 +31,7 @@ documentation, embed those details directly in the skill.
 Use these skills for tasks such as:
 
 - Getting started with a binding
+- Installing the CLI, language bindings, or maintained integration packages
 - Migrating NeMo Flow codebases to NeMo Relay
 - Instrumenting tool and LLM calls
 - Choosing the current primary documentation track: Rust, Python, or Node.js
