@@ -11,6 +11,16 @@ developers, integrators, and end users.
 Public skill directories use a `nemo-relay-` prefix so they remain recognizable
 and collision-resistant when exported outside this repository.
 
+Consumer skill names use task-oriented groups:
+
+- `nemo-relay-get-*` for onboarding and first-success workflows.
+- `nemo-relay-instrument-*` for application instrumentation, execution
+  boundaries, scope context, typed wrappers, and call wrapping.
+- `nemo-relay-plugin-*` for built-in plugin configuration, plugin authoring,
+  observability export, adaptive behavior, and reusable runtime components.
+- Verb-led names for workflows that do not fit those groups cleanly, such as
+  migration and runtime debugging.
+
 Skills in this directory are self-contained. A skill can point to another skill
 in this directory, but it must not rely on repository documentation files for
 required task guidance. If a skill needs behavior, API, or workflow details from
@@ -22,9 +32,9 @@ Use these skills for tasks such as:
 - Migrating NeMo Flow codebases to NeMo Relay
 - Instrumenting tool and LLM calls
 - Choosing the current primary documentation track: Rust, Python, or Node.js
-- Tuning performance with adaptive features
+- Tuning adaptive plugin behavior
 - Building reusable plugin behavior
-- Setting up observability and trace export
+- Setting up observability plugins and trace export
 - Debugging application-side NeMo Relay integrations
 
 When a skill mentions Go or raw FFI, treat those as source-first advanced

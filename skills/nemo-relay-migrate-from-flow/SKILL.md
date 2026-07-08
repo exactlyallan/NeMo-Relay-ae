@@ -1,6 +1,6 @@
 ---
 name: nemo-relay-migrate-from-flow
-description: Migrate applications, examples, integrations, documentation, package manifests, and repository code from NeMo Flow naming and packages to NeMo Relay across Python, Rust, Node.js, Go, C FFI, CLI, config, and observability surfaces; use when a user asks to rename nemo_flow/nemo-flow/NeMo Flow APIs, automate a migration, update imports or dependencies, or validate a Flow-to-Relay conversion
+description: Use when migrating applications, examples, integrations, documentation, package manifests, or repository code from NeMo Flow naming and packages to NeMo Relay across Python, Rust, Node.js, Go, C FFI, CLI, config, and observability surfaces
 author: NVIDIA Corporation and Affiliates
 license: Apache-2.0
 ---
@@ -101,6 +101,6 @@ otherwise regenerate them with Cargo, uv/pip, npm, or Go tooling.
 
 ## Related Skills
 
-- `nemo-relay-start`
+- `nemo-relay-get-started`
 - `nemo-relay-instrument-calls`
 - `nemo-relay-debug-runtime-integration`

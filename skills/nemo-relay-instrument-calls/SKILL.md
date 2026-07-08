@@ -1,6 +1,6 @@
 ---
 name: nemo-relay-instrument-calls
-description: Wrap application tool calls and LLM/provider calls with NeMo Relay scopes and managed execution APIs
+description: Use when wrapping application tool calls or LLM/provider calls with NeMo Relay scopes and managed execution APIs
 author: NVIDIA Corporation and Affiliates
 license: Apache-2.0
 ---
@@ -64,17 +64,17 @@ needs to run them through NeMo Relay correctly.
 
 ## Use Another Skill When
 
-- You need traces, ATIF, or export setup -> `nemo-relay-setup-observability`
+- You need traces, ATIF, or export setup -> `nemo-relay-plugin-observability`
 - You are debugging missing events or load failures ->
   `nemo-relay-debug-runtime-integration`
 - You need per-request isolation or worker-pool advice ->
-  `nemo-relay-use-context-isolation`
+  `nemo-relay-instrument-context-isolation`
 - You need reusable config-activated runtime behavior ->
-  `nemo-relay-build-plugin`
+  `nemo-relay-plugin-build`
 
 ## Related Skills
 
-- `nemo-relay-start`
-- `nemo-relay-typed-wrappers-codecs`
-- `nemo-relay-setup-observability`
-- `nemo-relay-build-plugin`
+- `nemo-relay-get-started`
+- `nemo-relay-instrument-typed-wrappers`
+- `nemo-relay-plugin-observability`
+- `nemo-relay-plugin-build`
