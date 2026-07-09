@@ -1,8 +1,9 @@
 ---
 name: nemo-relay-plugin-build
-description: Use when building or packaging reusable NeMo Relay runtime behavior as a config-activated plugin with validation and rollback-safe registration
-author: NVIDIA Corporation and Affiliates
+description: Use this skill when building or packaging reusable NeMo Relay runtime behavior as a configuration-activated plugin with deterministic validation and rollback-safe registration.
 license: Apache-2.0
+metadata:
+  author: NVIDIA Corporation and Affiliates
 ---
 
 # Build a Plugin

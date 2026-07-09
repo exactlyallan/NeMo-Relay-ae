@@ -1,27 +1,37 @@
 ---
 name: nemo-relay-plugin-observability
-description: Use when choosing or configuring NeMo Relay observability plugins, subscribers, or exporters, including custom event handling, ATIF trajectories, OpenTelemetry OTLP traces, or OpenInference export
-author: NVIDIA Corporation and Affiliates
+description: Use this skill when choosing or configuring NeMo Relay observability through the built-in plugin, subscribers, or exporters, including raw ATOF events, ATIF trajectories, OpenTelemetry traces, OpenInference export, or custom event handling.
 license: Apache-2.0
+metadata:
+  author: NVIDIA Corporation and Affiliates
 ---
-
 
 # Configure Observability Plugins
 
-Use this skill when an application developer wants visibility into NeMo Relay
-activity, needs to choose an observability output, or needs to configure a
-built-in observability subscriber or exporter.
+Start with one exporter managed by the built-in Observability plugin. This is
+the default for reusable process configuration and the best first plugin for
+most users because it makes Relay's captured activity visible.
+
+Use manual subscriber or exporter APIs only when a test, script, or application
+needs direct control over registration names, collection windows, or flush
+timing. Both paths consume the same canonical event stream.
 
 ## Choose The Output
 
 - **Console or custom event handling**
-  Use subscribers.
+  Use a manual subscriber for short-lived in-process inspection.
+- **Raw canonical lifecycle events**
+  Use ATOF JSONL; read `references/atof.md`.
 - **Portable execution trajectories**
-  Use `AtifExporter`; read `references/atif.md`.
+  Use ATIF; read `references/atif.md`.
 - **General OTLP tracing**
-  Use the OpenTelemetry subscriber; read `references/opentelemetry.md`.
+  Use OpenTelemetry; read `references/opentelemetry.md`.
 - **OpenInference-aware backends**
-  Use the OpenInference subscriber; read `references/openinference.md`.
+  Use OpenInference; read `references/openinference.md`.
+
+Choose one output first and verify it before adding another. ATOF is the
+default local proof because it preserves the raw event stream with the least
+translation. Add sanitization before exporters receive sensitive payloads.
 
 ## Embedded Event And Subscriber Model
 
@@ -35,8 +45,8 @@ built-in observability subscriber or exporter.
   scope closes.
 - Plugin-installed subscribers are reusable, configuration-driven runtime
   components.
-- Exporter-oriented subscribers translate the event stream into ATIF,
-  OpenTelemetry, or OpenInference output.
+- Exporter-oriented subscribers preserve raw ATOF or translate the event stream
+  into ATIF, OpenTelemetry, or OpenInference output.
 - Event payloads reflect sanitized post-guardrail input and output when calls use
   managed helpers or manual lifecycle params provide those fields.
 - Event fields include semantic input/output through the ATOF `data` field,
@@ -48,21 +58,24 @@ built-in observability subscriber or exporter.
 1. Create the exporter or subscriber.
 2. Register it with a unique name before the relevant scoped work.
 3. Run NeMo Relay-instrumented work inside scopes.
-4. Deregister it.
-5. Flush or shut down if the binding supports it and deterministic delivery is needed.
+4. Flush if deterministic delivery is needed and the binding supports it.
+5. Deregister it, then shut it down when the process or subsystem is done.
 
 ## Binding Names
 
 - Python: `nemo_relay.subscribers.register(...)`,
+  `AtofExporter`, `AtifExporter`, `OpenTelemetrySubscriber`, and
+  `OpenInferenceSubscriber`
+- Node.js: root exports `registerSubscriber(...)`, `AtofExporter`,
   `AtifExporter`, `OpenTelemetrySubscriber`, and `OpenInferenceSubscriber`
-- Node.js: root exports `registerSubscriber(...)`, `AtifExporter`,
-  `OpenTelemetrySubscriber`, and `OpenInferenceSubscriber`
 - Rust: `nemo_relay::api::subscriber` and `nemo_relay::observability::*`
 - Go: source-first wrappers expose equivalent register, exporter, and subscriber
   lifecycle methods
 
 ## Load A Reference When
 
+- You need raw JSONL events for local debugging or offline inspection ->
+  `references/atof.md`
 - You already know you need ATIF trajectories -> `references/atif.md`
 - You already know you need OTLP/OpenTelemetry traces ->
   `references/opentelemetry.md`
@@ -73,6 +86,8 @@ built-in observability subscriber or exporter.
 
 - You need to package subscriber-based export behavior as a reusable plugin ->
   `nemo-relay-plugin-build`
+- You have not instrumented a scope, tool call, or LLM call yet ->
+  `nemo-relay-get-started` or `nemo-relay-instrument-calls`
 - You are debugging missing telemetry -> `nemo-relay-debug-runtime-integration`
 
 ## Related Skills

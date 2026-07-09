@@ -1,10 +1,10 @@
 ---
 name: nemo-relay-instrument-typed-wrappers
-description: Use when adding NeMo Relay typed wrappers or codecs while preserving middleware behavior
-author: NVIDIA Corporation and Affiliates
+description: Use this skill when adding NeMo Relay typed wrappers, domain types, or provider codecs while preserving JSON middleware semantics and caller-visible behavior.
 license: Apache-2.0
+metadata:
+  author: NVIDIA Corporation and Affiliates
 ---
-
 
 # Use Typed Wrappers And Codecs
 

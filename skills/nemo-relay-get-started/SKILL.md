@@ -1,71 +1,112 @@
 ---
 name: nemo-relay-get-started
-description: Use when application developers need to pick a NeMo Relay binding and reach a first working scope, tool call, or LLM call
-author: NVIDIA Corporation and Affiliates
+description: Use this skill when first-time NeMo Relay users want to try Relay, choose the least-complex supported quick start, or verify initial value through the CLI, a maintained integration, or direct Python, Node.js, or Rust instrumentation before production setup.
 license: Apache-2.0
+metadata:
+  author: NVIDIA Corporation and Affiliates
 ---
-
 
 # Get Started With NeMo Relay
 
-Use this skill for first-time users who want the shortest path to a working
-example. Rust, Python, and Node.js are the primary quick-start and hosted-docs
-paths. Go and the raw FFI surface are source-first advanced paths.
+Guide a new user to visible Relay value with the least complicated applicable
+trial. Do not begin with production deployment or Relay's full architecture.
 
-## Default Path
+## Choose A Try-Now Path
 
-- Pick the user's host language first: Rust, Python, or Node.js. If they are
-  using Go or raw FFI, verify names against tracked source and tests.
-- Prefer the managed execution APIs over manual lifecycle APIs.
-- Start with one scope, one tool call, and one LLM call.
-- Add observability only after the basic flow works.
+Evaluate these paths in order. Use the first one that fits the user's stated
+goal and existing environment.
 
-## Guidance
+1. **CLI try-now (default)**: choose this for a generic "try Relay" request or
+   when the user wants value without modifying application code. Run Codex,
+   Claude Code, or Hermes through the local CLI wrapper. Read
+   [CLI Try-Now](references/cli-try-now.md).
+2. **Built-in integrations try-now**: choose this when an existing LangChain,
+   LangGraph, Deep Agents, or OpenClaw application owns the execution boundary.
+   Prefer the maintained supported integration over manual wrapping. Read
+   [Built-In Integrations Try-Now](references/built-in-integrations-try-now.md).
+3. **Language-specific manual try-now**: choose this when the user's Python,
+   Node.js, or Rust application directly owns its tool or LLM call sites and no
+   maintained integration is the better boundary. Read
+   [Manual Language Try-Now](references/manual-language-try-now.md).
 
-- **Rust**: use `nemo_relay::api::scope::{push_scope, pop_scope, event}` with
-  builder params, then `nemo_relay::api::tool::tool_call_execute(...)` and
-  `nemo_relay::api::llm::llm_call_execute(...)`
-- **Python**: `uv sync`, then use `nemo_relay.scope.scope(...)`,
-  `nemo_relay.tools.execute(...)`, and `nemo_relay.llm.execute(...)`
-- **Node.js**: build the addon, then use `withScope(...)`,
-  `toolCallExecute(...)`, and `llmCallExecute(...)`
-- **Go**: use source-first wrappers such as `scope.Push(...)`,
-  `tools.Execute(...)`, `llm.Execute(...)`, or top-level `PushScope(...)`,
-  `ToolCallExecute(...)`, and `LlmCallExecute(...)`
-- **FFI**: recommend only for binding or embedding work; verify C names such as
-  `nemo_relay_push_scope`, `nemo_relay_tool_call_execute`, and
-  `nemo_relay_llm_call_execute` in the current header
+Do not ask the user to choose among all three when their request, manifest, or
+framework already identifies the boundary. For an unspecified request, use the
+CLI path. When more than one CLI agent is available, ask one concise question
+to select the agent.
 
-## Common Pitfalls
+## Resolve Installation Without Looping
 
-- Calling execute APIs without an active scope
-- Skipping the build step for Rust, Python, or Node.js
-- Assuming source-first Go/FFI bindings have the same hosted-doc coverage
-  as Rust, Python, and Node.js
-- Mixing manual lifecycle APIs into a first example
+Select the try-now path before choosing an install package.
 
-## Embedded Quick-Start Notes
+- CLI path -> verify `nemo-relay --version`; if missing, use
+  `nemo-relay-install` for the CLI outcome.
+- Built-in integration path -> use `nemo-relay-install` for the named
+  framework or harness package.
+- Manual language path -> use `nemo-relay-install` for the detected language
+  package.
 
-- Install from packages when building a consumer app: Rust uses `cargo add
-  nemo-relay`, Python uses `uv add nemo-relay`, and Node.js uses `npm install
-  nemo-relay-node`.
-- Use repository setup commands when working from a checkout: Rust builds the
-  workspace, Python rebuilds the virtual environment and native extension with
-  `uv sync`, and Node.js installs and builds the native addon before tests or
-  examples run.
-- A first example should register a short-lived subscriber, open an agent scope,
-  emit one mark event, run one managed tool call, run one managed LLM call, then
-  deregister the subscriber. In Python use `nemo_relay.subscribers`; in Node.js
-  use root exports such as `registerSubscriber`; in Rust use
-  `nemo_relay::api::subscriber`.
-- Success means the app emits scope start/end events plus tool and LLM lifecycle
-  events, and the application result remains the provider or tool result.
-- Scope handles are explicit in Rust and optional in higher-level Python and
-  Node.js helpers when the active scope is already correct. Pass the handle when
-  the surrounding framework makes parentage ambiguous.
+If installation already succeeded, preserve the chosen path and continue from
+its next step. Do not ask the install-path question again or bounce between the
+install and get-started skills.
 
-## Related Skills
+## Apply The Common First-Value Contract
 
-- `nemo-relay-instrument-calls`
-- `nemo-relay-plugin-observability`
-- `nemo-relay-debug-runtime-integration`
+Follow the selected reference, then:
+
+1. Inspect the target environment and existing Relay configuration before
+   proposing changes.
+2. Explain the attachment boundary and show the exact minimal change.
+3. Obtain confirmation before writing configuration, modifying application
+   code, or launching a model-consuming run.
+4. Use a non-sensitive, read-only trial and exercise one representative tool
+   and LLM path when the selected surface exposes both.
+5. Verify observable evidence from the selected path rather than treating a
+   successful application result as proof that Relay is active.
+6. Summarize the captured root, tool, and model relationships without dumping
+   prompts, credentials, or complete event payloads.
+
+Explain only the concepts visible in the result: the chosen attachment
+boundary, scopes and parentage, captured lifecycle events, and how subscribers
+or the Observability plugin make those events inspectable. Keep instrumentation
+and export distinct.
+
+## Stop After The Proof
+
+Stop when the selected path's success checks pass. Recommend only the next
+relevant workflow:
+
+**Plugin progression:** Present the Observability plugin as the best first
+plugin for most new users because it makes Relay activity visible and confirms
+that the selected boundary is emitting useful events. After that proof, match
+optional built-in plugins to the user's end goal instead of enabling them by
+default:
+
+- Adaptive -> adaptive runtime behavior and optimization
+- NeMo Guardrails -> policy checks around managed execution
+- PII Redaction -> sanitization of sensitive observability payloads
+- Model Pricing -> cost estimates for managed LLM responses
+
+Use the [plugin overview](https://docs.nvidia.com/nemo/relay/dev/configure-plugins/about)
+to select the next component. Keep each addition incremental and verify its
+behavior before layering in another plugin.
+
+Other handoffs:
+
+- Direct application expansion -> `nemo-relay-instrument-calls`
+- Additional exporters or durable observability configuration ->
+  `nemo-relay-plugin-observability`
+- A different package or supported integration -> `nemo-relay-install`
+- Persistent Claude Code or Codex loading -> CLI plugin-installation guidance
+- Missing hooks, gateway traffic, or events -> `nemo-relay doctor`,
+  `nemo-relay doctor --json`, or `nemo-relay-debug-runtime-integration`
+
+Do not configure production OTLP backends, model pricing, guardrails, adaptive
+tuning, custom plugins, Go or FFI examples during the quick start. Mention
+optional plugins only as end-goal-driven next steps.
+
+## Public Entry Points
+
+- CLI: https://docs.nvidia.com/nemo/relay/dev/nemo-relay-cli/about
+- Maintained integrations: https://docs.nvidia.com/nemo/relay/dev/supported-integrations/about
+- Language quick starts: https://docs.nvidia.com/nemo/relay/dev/getting-started/quick-start
+- Plugin selection: https://docs.nvidia.com/nemo/relay/dev/configure-plugins/about

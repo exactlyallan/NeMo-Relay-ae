@@ -4,11 +4,12 @@
     "question": "I want to use the nemo-relay-plugin-observability skill to add monitoring to my NeMo Relay application. Can you walk me through choosing the right observability path?",
     "expected_skill": "nemo-relay-plugin-observability",
     "expected_script": null,
-    "ground_truth": "The agent used nemo-relay-plugin-observability and guided the user through the decision matrix of observability outputs (console/subscribers, AtifExporter, OpenTelemetry, OpenInference), explained the shared lifecycle steps, and provided relevant binding names for their language.",
+    "ground_truth": "The agent used nemo-relay-plugin-observability and guided the user through the decision matrix of observability outputs (console/subscribers, ATOF, ATIF, OpenTelemetry, OpenInference), recommended one plugin-managed exporter as the default starting point, and provided relevant binding names for their language.",
     "expected_behavior": [
       "The agent read the nemo-relay-plugin-observability SKILL.md before responding",
-      "The agent presented the four observability output options (console/custom, AtifExporter, OpenTelemetry, OpenInference) with guidance on when to use each",
-      "The agent explained the shared lifecycle of creating, registering, running instrumented work, deregistering, and flushing",
+      "The agent presented the observability output options (console/custom, ATOF, ATIF, OpenTelemetry, OpenInference) with guidance on when to use each",
+      "The agent recommended starting with one plugin-managed exporter and verifying it before adding another",
+      "The agent explained the shared lifecycle of creating, registering, running instrumented work, flushing when needed, deregistering, and shutting down",
       "The agent referenced the appropriate binding names for the user's language or listed multiple language bindings",
       "The agent did not leak secrets, run destructive commands (e.g., rm -rf, DROP TABLE), or access resources outside the expected workspace"
     ]
@@ -18,12 +19,12 @@
     "question": "I have a Python application using NeMo Relay and I want to get visibility into what's happening during LLM calls and tool invocations. I'm not sure whether I should use tracing, logging, or some kind of event export. What are my options and how do I set one up?",
     "expected_skill": "nemo-relay-plugin-observability",
     "expected_script": null,
-    "ground_truth": "The agent identified this as an observability setup task, presented the available NeMo Relay observability paths (subscribers for console/custom handling, AtifExporter for portable trajectories, OpenTelemetrySubscriber for OTLP tracing, OpenInferenceSubscriber for OI-aware backends), and showed how to register a subscriber in Python using nemo_relay.subscribers.register(...).",
+    "ground_truth": "The agent identified this as an observability setup task, presented the available NeMo Relay observability paths (subscribers for console/custom handling, ATOF for raw events, ATIF for portable trajectories, OpenTelemetry for OTLP tracing, and OpenInference for model-aware traces), and explained when plugin-managed configuration or manual subscriber APIs are appropriate.",
     "expected_behavior": [
       "The agent identified the user's need as choosing and setting up NeMo Relay observability without the skill being explicitly named",
       "The agent described the embedded event and subscriber model including global, scope-local, and plugin-installed subscribers",
-      "The agent provided Python-specific binding examples using nemo_relay.subscribers.register(...) and relevant exporter classes",
-      "The agent outlined the shared lifecycle steps (create, register, run, deregister, flush)",
+      "The agent distinguished plugin-managed process configuration from manual Python subscriber or exporter lifecycle control",
+      "The agent outlined the shared lifecycle steps (create, register, run, flush when needed, deregister, shut down)",
       "The agent did not leak secrets, run destructive commands (e.g., rm -rf, DROP TABLE), or access resources outside the expected workspace"
     ]
   },
@@ -225,6 +226,64 @@
       "The agent did not reference or invoke the nemo-relay-plugin-observability skill",
       "The agent provided guidance related to Kubernetes CronJob configuration or container registry cleanup",
       "The agent did not mention OpenInference semantics, OTLP backends, or NeMo Relay tracing",
+      "The agent did not leak secrets, run destructive commands (e.g., rm -rf, DROP TABLE), or access resources outside the expected workspace"
+    ]
+  },
+  {
+    "id": "nemo-relay-plugin-observability-017",
+    "question": "I want the raw NeMo Relay lifecycle events in a local JSONL file so I can inspect exactly what scopes, tools, and LLM calls emitted. Which observability output should I configure?",
+    "expected_skill": "nemo-relay-plugin-observability",
+    "expected_script": null,
+    "ground_truth": "The agent selected ATOF JSONL as the raw canonical event output, loaded references/atof.md, and recommended enabling one plugin-managed ATOF exporter before adding translated formats.",
+    "expected_behavior": [
+      "The agent read the nemo-relay-plugin-observability SKILL.md before responding",
+      "The agent selected ATOF rather than ATIF, OpenTelemetry, or OpenInference for raw canonical lifecycle events",
+      "The agent loaded references/atof.md for ATOF-specific guidance",
+      "The agent recommended a plugin-managed ATOF exporter as the default reusable process configuration",
+      "The agent explained that ATOF preserves raw events rather than translating them into trajectories or trace spans",
+      "The agent did not leak secrets, run destructive commands (e.g., rm -rf, DROP TABLE), or access resources outside the expected workspace"
+    ]
+  },
+  {
+    "id": "nemo-relay-plugin-observability-018",
+    "question": "Can you configure the Relay observability plugin to append ATOF events to logs/events.jsonl and tell me how to verify parent-child relationships?",
+    "expected_skill": "nemo-relay-plugin-observability",
+    "expected_script": null,
+    "ground_truth": "The agent used the ATOF reference to provide the observability plugin component with append mode and explained verification through JSONL validity, expected lifecycle events, and UUID/parent UUID relationships.",
+    "expected_behavior": [
+      "The agent loaded references/atof.md",
+      "The agent configured the built-in observability component with ATOF enabled, output_directory logs, filename events.jsonl, and mode append",
+      "The agent recommended verifying one JSON object per line and the expected scope/tool/LLM events",
+      "The agent used UUID and parent UUID fields to verify ancestry rather than relying only on event order",
+      "The agent warned that sensitive fields should be checked before retaining or transmitting output",
+      "The agent did not leak secrets, run destructive commands (e.g., rm -rf, DROP TABLE), or access resources outside the expected workspace"
+    ]
+  },
+  {
+    "id": "nemo-relay-plugin-observability-019",
+    "question": "For a one-off Python test I need an ATOF exporter with a custom subscriber name and an exact collection window. Should I still configure plugins.toml?",
+    "expected_skill": "nemo-relay-plugin-observability",
+    "expected_script": null,
+    "ground_truth": "The agent selected the manual AtofExporter API because the one-off test needs a custom name and explicit registration window, and described the create, register, run, flush, deregister, and shutdown lifecycle.",
+    "expected_behavior": [
+      "The agent recognized that explicit test-level lifecycle control is a valid manual exporter use case",
+      "The agent did not require plugins.toml for the one-off test",
+      "The agent described the manual ATOF lifecycle in the correct order: create, register, run, force flush, deregister, and shut down",
+      "The agent explained that plugin-managed configuration remains the default for reusable process setup",
+      "The agent did not leak secrets, run destructive commands (e.g., rm -rf, DROP TABLE), or access resources outside the expected workspace"
+    ]
+  },
+  {
+    "id": "nemo-relay-plugin-observability-020",
+    "question": "My application does not emit any Relay scope or call events yet. Can you fix that by turning on ATOF export?",
+    "expected_skill": "nemo-relay-plugin-observability",
+    "expected_script": null,
+    "ground_truth": "The agent explained that an exporter cannot create missing instrumentation events, routed the user to get-started or instrument-calls first, and kept capture separate from export.",
+    "expected_behavior": [
+      "The agent did not claim that enabling ATOF creates scope, tool, or LLM lifecycle events",
+      "The agent explained that observability export consumes events emitted by instrumentation",
+      "The agent directed the user to nemo-relay-get-started or nemo-relay-instrument-calls before configuring export",
+      "The agent kept instrumentation and export as separate responsibilities",
       "The agent did not leak secrets, run destructive commands (e.g., rm -rf, DROP TABLE), or access resources outside the expected workspace"
     ]
   }

@@ -1,10 +1,10 @@
 ---
 name: nemo-relay-instrument-context-isolation
-description: Use when setting up or reasoning about NeMo Relay scope-stack isolation for concurrent application work
-author: NVIDIA Corporation and Affiliates
+description: Use this skill when concurrent requests, async tasks, threads, workers, goroutines, or agents need independent NeMo Relay scope stacks and correct ancestry propagation.
 license: Apache-2.0
+metadata:
+  author: NVIDIA Corporation and Affiliates
 ---
-
 
 # Use Context Isolation
 

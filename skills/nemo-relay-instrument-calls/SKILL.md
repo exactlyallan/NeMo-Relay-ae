@@ -1,10 +1,10 @@
 ---
 name: nemo-relay-instrument-calls
-description: Use when wrapping application tool calls or LLM/provider calls with NeMo Relay scopes and managed execution APIs
-author: NVIDIA Corporation and Affiliates
+description: Use this skill when an application owns tool or LLM/provider call sites and needs to wrap them with NeMo Relay scopes and managed execution APIs for lifecycle events, middleware, or guardrails.
 license: Apache-2.0
+metadata:
+  author: NVIDIA Corporation and Affiliates
 ---
-
 
 # Instrument Tool And LLM Calls
 

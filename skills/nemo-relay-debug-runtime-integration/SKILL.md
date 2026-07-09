@@ -1,10 +1,10 @@
 ---
 name: nemo-relay-debug-runtime-integration
-description: Use when debugging application-side NeMo Relay integration issues such as load failures, inactive scopes, missing events, or adaptive/plugin wiring problems
-author: NVIDIA Corporation and Affiliates
+description: Use this skill when NeMo Relay is installed or imported but application-side runtime behavior is missing or incorrect, including load failures, inactive scopes, missing events, and plugin or adaptive wiring problems.
 license: Apache-2.0
+metadata:
+  author: NVIDIA Corporation and Affiliates
 ---
-
 
 # Debug Runtime Integration
 

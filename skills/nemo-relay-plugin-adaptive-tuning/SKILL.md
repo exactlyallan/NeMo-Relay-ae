@@ -1,10 +1,10 @@
 ---
 name: nemo-relay-plugin-adaptive-tuning
-description: Use when planning or configuring NeMo Relay adaptive plugin tuning, including telemetry, state, adaptive_hints, tool_parallelism, ACG, hint consumption, or measured rollout from runtime signals
-author: NVIDIA Corporation and Affiliates
+description: Use this skill when baseline NeMo Relay instrumentation exists and the user wants to configure or evaluate adaptive plugin behavior, including telemetry, state, adaptive_hints, tool_parallelism, ACG, hint consumption, or measured rollout.
 license: Apache-2.0
+metadata:
+  author: NVIDIA Corporation and Affiliates
 ---
-
 
 # Tune Adaptive Plugin Behavior
 
