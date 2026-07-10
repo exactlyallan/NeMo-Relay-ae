@@ -70,16 +70,19 @@ boundary, scopes and parentage, captured lifecycle events, and how subscribers
 or the Observability plugin make those events inspectable. Keep instrumentation
 and export distinct.
 
-## Stop After The Proof
+## Continue With One Plugin
 
-Stop when the selected path's success checks pass. Recommend only the next
-relevant workflow:
+Stop the initial try-now workflow when the selected path's success checks pass.
+Then make one additional built-in plugin the primary suggested next step.
 
-**Plugin progression:** Present the Observability plugin as the best first
-plugin for most new users because it makes Relay activity visible and confirms
-that the selected boundary is emitting useful events. After that proof, match
-optional built-in plugins to the user's end goal instead of enabling them by
-default:
+Explain Relay's core progression: instrument an execution boundary once, then
+change or extend behavior through plugin configuration without repeatedly
+rewriting those call sites. Easy plugin configuration and reconfiguration is
+the main value to demonstrate after the first observable proof.
+
+If the selected path did not use plugin-managed Observability, add it first to
+establish the reusable plugin path. If Observability already produced the
+proof, ask what outcome matters next and recommend exactly one plugin:
 
 - Adaptive -> adaptive runtime behavior and optimization
 - NeMo Guardrails -> policy checks around managed execution
@@ -87,22 +90,25 @@ default:
 - Model Pricing -> cost estimates for managed LLM responses
 
 Use the [plugin overview](https://docs.nvidia.com/nemo/relay/dev/configure-plugins/about)
-to select the next component. Keep each addition incremental and verify its
-behavior before layering in another plugin.
+to select the next component. Preview its smallest configuration, obtain
+confirmation, and verify its behavior before layering in another plugin.
 
-Other handoffs:
+Use another handoff only after the user accepts or declines plugin progression,
+or when the demonstrated boundary does not yet cover the intended workflow:
 
 - Direct application expansion -> `nemo-relay-instrument-calls`
 - Additional exporters or durable observability configuration ->
   `nemo-relay-plugin-observability`
 - A different package or supported integration -> `nemo-relay-install`
-- Persistent Claude Code or Codex loading -> CLI plugin-installation guidance
+- Persistent Claude Code or Codex loading -> `nemo-relay-install`; for Codex
+  Desktop, complete its recovery-note safety gate before changing global config
 - Missing hooks, gateway traffic, or events -> `nemo-relay doctor`,
   `nemo-relay doctor --json`, or `nemo-relay-debug-runtime-integration`
 
 Do not configure production OTLP backends, model pricing, guardrails, adaptive
 tuning, custom plugins, Go or FFI examples during the quick start. Mention
-optional plugins only as end-goal-driven next steps.
+optional plugins only after the initial proof and add only the one the user
+selects.
 
 ## Public Entry Points
 

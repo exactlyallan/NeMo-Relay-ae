@@ -43,6 +43,30 @@ Use this order from least to most application-specific:
 For "try Relay" requests, default to the CLI and temporary transparent run.
 Do not make persistent host-plugin installation the default.
 
+## Protect Codex Desktop Continuity
+
+Before persistent Codex installation, determine whether the user is operating
+from Codex Desktop. Persistent `nemo-relay install codex` changes the active
+Codex provider and can make the current or older Desktop threads appear missing
+after restart because of an upstream provider-filtering bug. The threads are
+not deleted.
+
+For Codex Desktop users:
+
+1. Recommend temporary transparent run first.
+2. If the user still wants persistent installation, read the Codex Desktop
+   section in [CLI Installation](references/cli-install.md).
+3. Preview the install and proposed recovery-note location.
+4. Obtain confirmation before writing either the recovery note or global Codex
+   configuration.
+5. Render `assets/codex-desktop-recovery.md` as
+   `NEMO_RELAY_CODEX_DESKTOP_RECOVERY.md` in the user's workspace root before
+   running the persistent installer.
+6. Do not restart Codex Desktop until the user has the recovery-file path.
+
+Do not copy, delete, or rewrite Codex session files or SQLite state to work
+around the visibility bug.
+
 ## Install And Verify
 
 1. Inspect the target manifest, environment, operating system, architecture,

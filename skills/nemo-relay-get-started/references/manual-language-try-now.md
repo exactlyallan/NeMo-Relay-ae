@@ -59,9 +59,12 @@ Returned callback values without event evidence do not verify Relay
 instrumentation. Summarize event names and parentage without dumping complete
 payloads.
 
-After this proof, use `nemo-relay-instrument-calls` to instrument real
-application boundaries. Use `nemo-relay-plugin-observability` only when the
-next goal is durable or external export.
+After this proof, preserve the demonstrated boundary and recommend one
+goal-aligned plugin as the primary next step. If the trial used only a
+short-lived subscriber, configure plugin-managed Observability first; otherwise
+choose Adaptive, NeMo Guardrails, PII Redaction, or Model Pricing based on the
+user's outcome. Use `nemo-relay-instrument-calls` only when the demonstrated
+boundary does not yet cover the real application workflow.
 
 Language quick-start entry point:
 https://docs.nvidia.com/nemo/relay/dev/getting-started/quick-start

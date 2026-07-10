@@ -29,6 +29,11 @@ expose that maintainer set to specific coding agents.
   [`nemo-relay-plugin-observability`](nemo-relay-plugin-observability/SKILL.md).
 - **Something is not loading or emitting events**: use
   [`nemo-relay-debug-runtime-integration`](nemo-relay-debug-runtime-integration/SKILL.md).
+- **Using Codex Desktop**: prefer the temporary CLI try-now path. Before a
+  persistent Codex install changes global provider configuration,
+  [`nemo-relay-install`](nemo-relay-install/SKILL.md) warns about the current
+  [history-visibility bug](https://github.com/openai/codex/issues/24648) and
+  creates a workspace recovery file with undo instructions.
 
 ## Onboarding
 
@@ -62,9 +67,11 @@ expose that maintainer set to specific coding agents.
 
 ## Common Journeys
 
-1. **Evaluate Relay locally**: install -> get started -> observability.
-2. **Instrument an application**: install -> get started -> instrument calls ->
-   add context isolation or typed wrappers only when needed.
+1. **Evaluate Relay locally**: install -> get started with Observability -> add
+   one goal-aligned plugin.
+2. **Instrument an application**: install -> get started -> add one plugin ->
+   expand call instrumentation, context isolation, or typed wrappers only when
+   the demonstrated boundary is insufficient.
 3. **Use an existing framework**: install the maintained integration -> get
    started with its built-in path -> add observability or another plugin based
    on the desired outcome.

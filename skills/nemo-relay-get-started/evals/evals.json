@@ -174,13 +174,47 @@
     "question": "My first Relay quick start worked. Which plugin should I explore next?",
     "expected_skill": "nemo-relay-get-started",
     "expected_script": null,
-    "ground_truth": "The agent recommends Observability as the normal first plugin because it makes Relay activity inspectable, then maps Adaptive, NeMo Guardrails, PII Redaction, and Model Pricing to distinct end goals without enabling all plugins at once.",
+    "ground_truth": "The agent recognizes Observability as the initial proof plugin, explains that Relay lets the user instrument once and change behavior later through plugin configuration, then recommends exactly one additional plugin based on the user's desired outcome.",
     "expected_behavior": [
-      "The agent recommends the Observability plugin as the best general starting point",
-      "The agent explains that Observability verifies and exports activity rather than changing execution semantics",
+      "The agent recognizes that Observability established the first reusable plugin path during the default quick start",
+      "The agent explains the instrument-once, change-behavior-through-plugins value of Relay",
       "The agent maps Adaptive to optimization, NeMo Guardrails to policy, PII Redaction to sensitive telemetry, and Model Pricing to cost estimates",
-      "The agent asks or infers the user's end goal before recommending another plugin",
+      "The agent asks or infers the user's end goal before recommending exactly one additional plugin",
+      "The agent previews the smallest relevant plugin configuration and obtains confirmation before enabling it",
+      "The agent recommends additional instrumentation only when the demonstrated boundary does not cover the real workflow",
       "The agent recommends adding and verifying one plugin at a time rather than enabling every built-in component"
+    ]
+  },
+  {
+    "id": "nemo-relay-get-started-014",
+    "question": "I am in Codex Desktop right now and want to try Relay without losing access to this conversation when I restart. What is the safest quick start?",
+    "expected_skill": "nemo-relay-get-started",
+    "expected_script": null,
+    "ground_truth": "The agent selects temporary CLI transparent run, explains that the wrapper does not change Codex Desktop global configuration, and avoids persistent installation. If the user wants to continue the existing thread through Relay, it asks them to fully quit Desktop and use resume --all or the known thread ID.",
+    "expected_behavior": [
+      "The agent selects the default CLI try-now path and reads references/cli-try-now.md",
+      "The agent recommends temporary nemo-relay codex rather than nemo-relay install codex",
+      "The agent explains that temporary wiring affects only the wrapped CLI process and does not instrument the already-running Desktop app",
+      "The agent explains that persistent provider changes can hide threads in Codex Desktop without deleting them",
+      "For continuing the same thread, the agent asks the user to fully quit Desktop and uses nemo-relay codex -- resume --all or resume <thread-id>",
+      "The agent avoids resume --last when crossing providers",
+      "The agent does not create a recovery file because no persistent configuration change is planned",
+      "The agent does not copy, delete, or rewrite Codex session files or SQLite state"
+    ]
+  },
+  {
+    "id": "nemo-relay-get-started-015",
+    "question": "The temporary Relay quick start worked. Make Relay always-on in Codex Desktop now.",
+    "expected_skill": "nemo-relay-get-started",
+    "expected_script": null,
+    "ground_truth": "The agent stops the quick-start workflow and hands persistent Codex Desktop setup to nemo-relay-install, requiring its warning, dry-run, confirmation, and recovery-note gate before global configuration changes.",
+    "expected_behavior": [
+      "The agent does not run persistent plugin installation as an unreviewed extension of the quick start",
+      "The agent explains the Codex Desktop provider-filtering risk before handoff",
+      "The agent routes the request to nemo-relay-install and its Persistent Codex Desktop Safety Gate",
+      "The agent requires NEMO_RELAY_CODEX_DESKTOP_RECOVERY.md to exist before global Codex configuration changes",
+      "The agent does not restart Desktop before giving the user the recovery-file path",
+      "The agent does not copy, delete, or rewrite Codex session files or SQLite state"
     ]
   }
 ]

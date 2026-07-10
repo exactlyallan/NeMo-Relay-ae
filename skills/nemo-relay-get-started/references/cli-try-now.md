@@ -12,11 +12,13 @@ plugin.
 ## Contents
 
 - [Preflight](#preflight)
+- [Protect Codex Desktop History Visibility](#protect-codex-desktop-history-visibility)
 - [Inspect Configuration Before Editing](#inspect-configuration-before-editing)
 - [Configure The Agent And Observability](#configure-the-agent-and-observability)
 - [Validate And Preview](#validate-and-preview)
 - [Run A Safe Trial](#run-a-safe-trial)
 - [Verify Both Outputs](#verify-both-outputs)
+- [Choose The Next Plugin](#choose-the-next-plugin)
 - [Troubleshoot The Smallest Failed Boundary](#troubleshoot-the-smallest-failed-boundary)
 
 ## Preflight
@@ -40,6 +42,33 @@ command -v hermes && hermes --version
 Use Codex CLI 0.129.0 or newer. Confirm that the selected agent is already
 authenticated before launching Relay. Never print tokens, API keys, or stored
 authentication files.
+
+## Protect Codex Desktop History Visibility
+
+Keep this quick start temporary. `nemo-relay codex` injects Relay configuration
+only into the wrapped CLI process and does not instrument the already-running
+Codex Desktop app or rewrite its global configuration.
+
+Do not run `nemo-relay install codex` from this try-now path. Persistent setup
+changes the active provider used by Codex Desktop. Because of the current
+[provider-filter bug](https://github.com/openai/codex/issues/24648), restarting
+Desktop can make the current setup thread and older threads appear missing even
+though they remain stored locally.
+
+If the user wants to continue an existing Desktop conversation through the
+temporary Relay wrapper, ask them to fully quit Desktop before launching:
+
+```bash
+nemo-relay codex -- resume --all
+```
+
+Use `nemo-relay codex -- resume <thread-id>` when the ID is known. Avoid
+`resume --last` when crossing providers.
+
+If the user explicitly requests persistent Codex Desktop integration, stop this
+quick start and hand off to `nemo-relay-install`. That skill must warn the user
+and create `NEMO_RELAY_CODEX_DESKTOP_RECOVERY.md` before changing global Codex
+configuration.
 
 ## Inspect Configuration Before Editing
 
@@ -194,6 +223,19 @@ when the session ends. Hermes writes or updates it on its supported finalize or
 reset lifecycle, so close or finalize the session before declaring ATIF
 missing.
 
+## Choose The Next Plugin
+
+After both outputs verify the first Relay boundary, explain the progression:
+the coding-agent session is already instrumented, and later behavior can change
+through plugin configuration without reinstrumenting that boundary.
+
+Ask which outcome matters next and recommend one built-in plugin: Adaptive for
+optimization, NeMo Guardrails for policy, PII Redaction for sensitive payloads,
+or Model Pricing for cost estimates. Use the plugin overview to show the
+smallest next configuration. Do not enable multiple plugins or extend
+instrumentation unless the user requests it or the current boundary is
+insufficient.
+
 ## Troubleshoot The Smallest Failed Boundary
 
 - **No ATOF or ATIF files**: run `nemo-relay doctor <agent> --json`; check plugin
@@ -217,3 +259,6 @@ reinstallation while validating this local trial.
 - CLI basic usage: https://docs.nvidia.com/nemo/relay/dev/nemo-relay-cli/basic-usage
 - Quick Start: https://docs.nvidia.com/nemo/relay/dev/getting-started/quick-start
 - Observability configuration: https://docs.nvidia.com/nemo/relay/dev/configure-plugins/observability/configuration
+- Codex integration: https://docs.nvidia.com/nemo/relay/dev/nemo-relay-cli/codex
+- Codex Desktop provider-filter bug: https://github.com/openai/codex/issues/24648
+- Plugin selection: https://docs.nvidia.com/nemo/relay/dev/configure-plugins/about
