@@ -18,6 +18,8 @@ timing. Both paths consume the same canonical event stream.
 
 ## Choose The Output
 
+Select the output that best matches the user's immediate inspection target:
+
 - **Console or custom event handling**
   Use a manual subscriber for short-lived in-process inspection.
 - **Raw canonical lifecycle events**
@@ -34,6 +36,8 @@ default local proof because it preserves the raw event stream with the least
 translation. Add sanitization before exporters receive sensitive payloads.
 
 ## Embedded Event And Subscriber Model
+
+Use this model when explaining how capture and export relate:
 
 - NeMo Relay emits one canonical event stream from scopes, marks, managed tool
   calls, managed LLM calls, middleware, and manual lifecycle APIs.
@@ -63,6 +67,8 @@ translation. Add sanitization before exporters receive sensitive payloads.
 
 ## Binding Names
 
+Use the names exported by the selected language binding:
+
 - Python: `nemo_relay.subscribers.register(...)`,
   `AtofExporter`, `AtifExporter`, `OpenTelemetrySubscriber`, and
   `OpenInferenceSubscriber`
@@ -74,25 +80,29 @@ translation. Add sanitization before exporters receive sensitive payloads.
 
 ## Load A Reference When
 
-- You need raw JSONL events for local debugging or offline inspection ->
-  `references/atof.md`
-- You already know you need ATIF trajectories -> `references/atif.md`
-- You already know you need OTLP/OpenTelemetry traces ->
-  `references/opentelemetry.md`
-- You already know you need OpenInference semantic traces ->
-  `references/openinference.md`
+Load only the reference required by the selected output:
+
+- Load `references/atof.md` for raw JSONL events used in local debugging or
+  offline inspection.
+- Load `references/atif.md` for ATIF trajectories.
+- Load `references/opentelemetry.md` for OTLP/OpenTelemetry traces.
+- Load `references/openinference.md` for OpenInference semantic traces.
 
 ## Use Another Skill When
 
-- You need to package subscriber-based export behavior as a reusable plugin ->
-  `nemo-relay-plugin-build`
-- You have not instrumented a scope, tool call, or LLM call yet ->
-  `nemo-relay-get-started` or `nemo-relay-instrument-calls`
-- You are debugging missing telemetry -> `nemo-relay-debug-runtime-integration`
+Choose another skill when the task belongs to an adjacent workflow:
+
+- Use `nemo-relay-plugin-build` to package subscriber-based export behavior as
+  a reusable plugin.
+- Use `nemo-relay-get-started` or `nemo-relay-instrument-calls` when no scope,
+  tool call, or LLM call has been instrumented.
+- Use `nemo-relay-debug-runtime-integration` to diagnose missing telemetry.
 
 ## Related Skills
 
-- `nemo-relay-instrument-calls`
-- `nemo-relay-instrument-typed-wrappers`
-- `nemo-relay-plugin-build`
-- `nemo-relay-debug-runtime-integration`
+Use these skills for adjacent workflows:
+
+- Instrument application calls with `nemo-relay-instrument-calls`.
+- Add typed wrappers with `nemo-relay-instrument-typed-wrappers`.
+- Package reusable behavior with `nemo-relay-plugin-build`.
+- Diagnose missing events with `nemo-relay-debug-runtime-integration`.

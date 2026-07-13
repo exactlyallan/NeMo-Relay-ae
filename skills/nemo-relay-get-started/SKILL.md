@@ -112,7 +112,9 @@ selects.
 
 ## Public Entry Points
 
-- CLI: https://docs.nvidia.com/nemo/relay/dev/nemo-relay-cli/about
-- Maintained integrations: https://docs.nvidia.com/nemo/relay/dev/supported-integrations/about
-- Language quick starts: https://docs.nvidia.com/nemo/relay/dev/getting-started/quick-start
-- Plugin selection: https://docs.nvidia.com/nemo/relay/dev/configure-plugins/about
+Use these public entry points for current product documentation:
+
+- [CLI overview](https://docs.nvidia.com/nemo/relay/dev/nemo-relay-cli/about)
+- [Maintained integrations](https://docs.nvidia.com/nemo/relay/dev/supported-integrations/about)
+- [Language quick starts](https://docs.nvidia.com/nemo/relay/dev/getting-started/quick-start)
+- [Plugin selection](https://docs.nvidia.com/nemo/relay/dev/configure-plugins/about)

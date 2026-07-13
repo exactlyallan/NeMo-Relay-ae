@@ -10,6 +10,8 @@ Desktop.
 
 ## Setup Record
 
+This record identifies the persistent change that the recovery steps undo:
+
 - Created: `{{created-at}}`
 - Workspace: `{{workspace-path}}`
 - Planned command: `nemo-relay install codex`
@@ -26,6 +28,8 @@ Do not copy, delete, or edit `~/.codex/sessions` or Codex SQLite state to repair
 sidebar visibility.
 
 ## Restore Normal Codex Desktop Visibility
+
+Use these steps to restore the original provider configuration:
 
 1. Fully quit Codex Desktop.
 2. Open a terminal and run:
@@ -77,7 +81,9 @@ Paste this into a new Codex task if you want an agent to perform the recovery:
 
 ## References
 
-- Codex Desktop provider-filter bug: https://github.com/openai/codex/issues/24648
-- Relay Codex integration: https://docs.nvidia.com/nemo/relay/dev/nemo-relay-cli/codex
-- Relay plugin installation and uninstall: https://docs.nvidia.com/nemo/relay/dev/nemo-relay-cli/plugin-installation
-- Relay transparent run: https://docs.nvidia.com/nemo/relay/dev/nemo-relay-cli/basic-usage#transparent-run
+Use these references for the upstream issue and supported Relay workflows:
+
+- [Codex Desktop provider-filter bug](https://github.com/openai/codex/issues/24648)
+- [Relay Codex integration](https://docs.nvidia.com/nemo/relay/dev/nemo-relay-cli/codex)
+- [Relay plugin installation and uninstall](https://docs.nvidia.com/nemo/relay/dev/nemo-relay-cli/plugin-installation)
+- [Relay transparent run](https://docs.nvidia.com/nemo/relay/dev/nemo-relay-cli/basic-usage#transparent-run)

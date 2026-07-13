@@ -23,9 +23,9 @@ package fits the target application.
 
 Use the matching quick start:
 
-- Python: https://docs.nvidia.com/nemo/relay/dev/getting-started/quick-start/python
-- Node.js: https://docs.nvidia.com/nemo/relay/dev/getting-started/quick-start/nodejs
-- Rust: https://docs.nvidia.com/nemo/relay/dev/getting-started/quick-start/rust
+- [Python quick start](https://docs.nvidia.com/nemo/relay/dev/getting-started/quick-start/python)
+- [Node.js quick start](https://docs.nvidia.com/nemo/relay/dev/getting-started/quick-start/nodejs)
+- [Rust quick start](https://docs.nvidia.com/nemo/relay/dev/getting-started/quick-start/rust)
 
 ## Attach The Smallest Working Boundary
 
@@ -66,5 +66,5 @@ choose Adaptive, NeMo Guardrails, PII Redaction, or Model Pricing based on the
 user's outcome. Use `nemo-relay-instrument-calls` only when the demonstrated
 boundary does not yet cover the real application workflow.
 
-Language quick-start entry point:
-https://docs.nvidia.com/nemo/relay/dev/getting-started/quick-start
+For all supported languages, see the
+[Quick Start](https://docs.nvidia.com/nemo/relay/dev/getting-started/quick-start).

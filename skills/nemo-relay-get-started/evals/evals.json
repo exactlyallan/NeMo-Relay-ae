@@ -89,9 +89,10 @@
     "question": "I am new to Relay, but my Python application is already built with LangGraph. Give me the quickest appropriate starting point.",
     "expected_skill": "nemo-relay-get-started",
     "expected_script": null,
-    "ground_truth": "The agent recognizes that LangGraph owns the framework boundary and selects the built-in-integrations try-now path before considering manual Python instrumentation, then routes installation and attachment to the maintained LangGraph integration.",
+    "ground_truth": "The agent recognizes that LangGraph owns the framework boundary, loads references/built-in-integrations-try-now.md, and selects the built-in-integrations path before considering manual Python instrumentation, then routes installation and attachment to the maintained LangGraph integration.",
     "expected_behavior": [
       "The agent selects the second, built-in-integrations path because the user named LangGraph",
+      "The agent loads references/built-in-integrations-try-now.md for the selected path",
       "The agent prefers the maintained LangGraph integration over the third, manual Python path",
       "The agent routes package selection through nemo-relay-install and the maintained LangGraph integration guidance",
       "The agent explains that the framework owns callbacks or scheduling at the attachment boundary",
@@ -104,9 +105,10 @@
     "question": "I own a Python agent application's tool and model call sites and want my first Relay integration in that code, not a coding-agent demo.",
     "expected_skill": "nemo-relay-get-started",
     "expected_script": null,
-    "ground_truth": "The agent confirms that no maintained framework integration owns the boundary, selects the third language-specific manual try-now path, uses nemo-relay-install for Python if needed, and guides one minimal scope, tool, LLM, and subscriber proof before handing broader wrapping to nemo-relay-instrument-calls.",
+    "ground_truth": "The agent confirms that no maintained framework integration owns the boundary, loads references/manual-language-try-now.md, selects the third language-specific manual try-now path, uses nemo-relay-install for Python if needed, and guides one minimal scope, tool, LLM, and subscriber proof before handing broader wrapping to nemo-relay-instrument-calls.",
     "expected_behavior": [
       "The agent selects the third, language-specific manual try-now path and preserves Python as the requested target",
+      "The agent loads references/manual-language-try-now.md for the selected path",
       "The agent confirms that a maintained integration is not the better boundary before using manual instrumentation",
       "The agent checks package installation through nemo-relay-install when needed",
       "The agent routes scopes and managed call wrapping to nemo-relay-instrument-calls",

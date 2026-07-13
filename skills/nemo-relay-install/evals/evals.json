@@ -17,15 +17,15 @@
   },
   {
     "id": "nemo-relay-install-002",
-    "question": "My Python agent app already has a pyproject.toml and I want to add NeMo Relay as a dependency, but I am not ready to configure scopes or observability. Which install command should I use?",
+    "question": "My Python agent app has pyproject.toml and poetry.lock. I want to add NeMo Relay as a dependency, but I am not ready to configure scopes or observability. Which install command should I use?",
     "expected_skill": "nemo-relay-install",
     "expected_script": null,
-    "ground_truth": "The agent used nemo-relay-install to choose the Python package path for an application project with pyproject.toml, recommended uv add nemo-relay, and limited verification to confirming the package can be imported in the target environment.",
+    "ground_truth": "The agent used nemo-relay-install to choose the Python package path, detected Poetry from the existing project metadata and lockfile, recommended poetry add nemo-relay, and limited verification to confirming the package can be imported in the target environment.",
     "expected_behavior": [
       "The agent selected the Python package install path because the app owns the Python dependency",
       "The agent loaded references/language-packages.md for the selected path",
-      "The agent recommended uv add nemo-relay for a project with pyproject.toml",
-      "The agent mentioned uv pip install nemo-relay or pip install nemo-relay only as alternatives for non-project or non-uv environments",
+      "The agent inspected the project metadata and lockfile before choosing a package-manager command",
+      "The agent recommended poetry add nemo-relay and did not introduce uv, pip, or another package manager",
       "The agent suggested import verification without writing a first scope or LLM call",
       "The agent did not continue into observability, plugin configuration, or quick-start setup",
       "The agent did not leak secrets, run destructive commands (e.g., rm -rf, DROP TABLE), or access resources outside the expected workspace"
@@ -52,11 +52,11 @@
     "question": "We use LangChain and Deep Agents in a Python app. I only want to install the maintained NeMo Relay integration dependencies today, not wire callbacks yet. What is the right package command?",
     "expected_skill": "nemo-relay-install",
     "expected_script": null,
-    "ground_truth": "The agent used nemo-relay-install to identify the maintained Python framework integration path and recommended installing the NeMo Relay Python package with the langchain and deepagents extras, while deferring callback wiring and runtime setup to later integration guidance.",
+    "ground_truth": "The agent used nemo-relay-install to identify the maintained Python framework integration path, inspected and preserved the project's existing package manager, and recommended installing the NeMo Relay Python package with the langchain and deepagents extras while deferring callback wiring and runtime setup to later integration guidance.",
     "expected_behavior": [
       "The agent selected the Python framework extras path rather than plain CLI or bare Node/Rust install",
       "The agent loaded references/maintained-integrations.md for the selected path",
-      "The agent recommended uv add with nemo-relay extras for the relevant maintained integrations",
+      "The agent inspected and preserved the project's existing package manager before installing the relevant nemo-relay extras",
       "The agent explained that extras install NeMo Relay plus dependencies needed by maintained public integrations",
       "The agent did not wire callbacks, scopes, subscribers, or plugin configuration",
       "The agent pointed follow-up setup to integration or get-started guidance after installation",

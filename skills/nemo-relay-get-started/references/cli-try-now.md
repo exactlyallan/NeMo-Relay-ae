@@ -255,10 +255,12 @@ reinstallation while validating this local trial.
 
 ## Source Documentation
 
-- CLI overview: https://docs.nvidia.com/nemo/relay/dev/nemo-relay-cli/about
-- CLI basic usage: https://docs.nvidia.com/nemo/relay/dev/nemo-relay-cli/basic-usage
-- Quick Start: https://docs.nvidia.com/nemo/relay/dev/getting-started/quick-start
-- Observability configuration: https://docs.nvidia.com/nemo/relay/dev/configure-plugins/observability/configuration
-- Codex integration: https://docs.nvidia.com/nemo/relay/dev/nemo-relay-cli/codex
-- Codex Desktop provider-filter bug: https://github.com/openai/codex/issues/24648
-- Plugin selection: https://docs.nvidia.com/nemo/relay/dev/configure-plugins/about
+Use these sources when the trial needs more detail:
+
+- [CLI overview](https://docs.nvidia.com/nemo/relay/dev/nemo-relay-cli/about)
+- [CLI basic usage](https://docs.nvidia.com/nemo/relay/dev/nemo-relay-cli/basic-usage)
+- [Quick Start](https://docs.nvidia.com/nemo/relay/dev/getting-started/quick-start)
+- [Observability configuration](https://docs.nvidia.com/nemo/relay/dev/configure-plugins/observability/configuration)
+- [Codex integration](https://docs.nvidia.com/nemo/relay/dev/nemo-relay-cli/codex)
+- [Codex Desktop provider-filter bug](https://github.com/openai/codex/issues/24648)
+- [Plugin selection](https://docs.nvidia.com/nemo/relay/dev/configure-plugins/about)

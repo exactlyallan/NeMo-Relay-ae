@@ -13,16 +13,19 @@ and applications.
 If you are developing NeMo Relay itself, changing core or binding APIs,
 maintaining repository infrastructure, or preparing a Relay contribution, use
 the [Relay maintainer skills](../.agents/skills/README.md) in `.agents/skills/`
-instead. The `.claude/skills` directory
-expose that maintainer set to Claude Code.
+instead. Compatible coding agents discover that standard directory directly;
+`.claude/skills` is a symlink that exposes the same maintainer set to Claude
+Code.
 
 ## Start Here
 
 - **New to Relay**: use [`nemo-relay-install`](nemo-relay-install/SKILL.md), then
   [`nemo-relay-get-started`](nemo-relay-get-started/SKILL.md).
 - **Want the fastest proof of value**: use
-  [`nemo-relay-get-started`](nemo-relay-get-started/SKILL.md). It tries the CLI
-  first, then built-in integrations, then language-specific manual integration.
+  [`nemo-relay-get-started`](nemo-relay-get-started/SKILL.md). It selects the
+  first path compatible with the user's goal and environment: the CLI for a
+  generic trial, a maintained integration such as LangChain or LangGraph when
+  already present, or language-specific manual integration.
 - **Already know where your application calls tools or models**: use
   [`nemo-relay-instrument-calls`](nemo-relay-instrument-calls/SKILL.md).
 - **Already emit Relay events and want useful output**: start with
@@ -37,14 +40,14 @@ expose that maintainer set to Claude Code.
 
 ## Onboarding
 
-| Skill | Use it when |
+| Skill | Use It When |
 |---|---|
 | [`nemo-relay-install`](nemo-relay-install/SKILL.md) | Choose and install the CLI, a language package, or a maintained framework or harness integration. |
 | [`nemo-relay-get-started`](nemo-relay-get-started/SKILL.md) | Reach a first observable Relay result through the least complicated applicable try-now path. |
 
 ## Instrument Applications
 
-| Skill | Use it when |
+| Skill | Use It When |
 |---|---|
 | [`nemo-relay-instrument-calls`](nemo-relay-instrument-calls/SKILL.md) | Wrap application-owned tool or LLM/provider calls with scopes and managed execution. |
 | [`nemo-relay-instrument-context-isolation`](nemo-relay-instrument-context-isolation/SKILL.md) | Keep scope context isolated across concurrent requests, tasks, threads, or agent runs. |
@@ -52,7 +55,7 @@ expose that maintainer set to Claude Code.
 
 ## Configure And Build Plugins
 
-| Skill | Use it when |
+| Skill | Use It When |
 |---|---|
 | [`nemo-relay-plugin-observability`](nemo-relay-plugin-observability/SKILL.md) | Inspect or export Relay activity through subscribers, ATOF, ATIF, OpenTelemetry, or OpenInference. This is the recommended first plugin for most users. |
 | [`nemo-relay-plugin-adaptive-tuning`](nemo-relay-plugin-adaptive-tuning/SKILL.md) | Configure and measure adaptive hints, tool parallelism, cache behavior, or other adaptive runtime features. |
@@ -60,12 +63,14 @@ expose that maintainer set to Claude Code.
 
 ## Migrate And Troubleshoot
 
-| Skill | Use it when |
+| Skill | Use It When |
 |---|---|
 | [`nemo-relay-migrate-from-flow`](nemo-relay-migrate-from-flow/SKILL.md) | Migrate an application, integration, configuration, or documentation surface from NeMo Flow to NeMo Relay. |
 | [`nemo-relay-debug-runtime-integration`](nemo-relay-debug-runtime-integration/SKILL.md) | Diagnose loading failures, inactive scopes, missing events, or plugin and adaptive wiring problems in an application-side integration. |
 
 ## Common Journeys
+
+Use these sequences to choose the next workflow step:
 
 1. **Evaluate Relay locally**: install -> get started with Observability -> add
    one goal-aligned plugin.

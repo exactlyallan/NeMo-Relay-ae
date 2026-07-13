@@ -40,6 +40,8 @@ instrumented work, force flush, deregister, then shut down.
 
 ## Verify
 
+Verify the export with the following checks:
+
 - Confirm the output file exists and contains one JSON object per line.
 - Confirm the expected root scope plus tool or LLM lifecycle events are present.
 - Check UUID and parent UUID relationships instead of relying only on event
@@ -51,5 +53,5 @@ Common failures include an unwritable output directory, an invalid mode, an
 empty endpoint URL, an unsupported endpoint transport, or shutdown occurring
 before pending events flush.
 
-Public reference:
-https://docs.nvidia.com/nemo/relay/dev/configure-plugins/observability/atof
+For the complete exporter configuration, see
+[ATOF observability](https://docs.nvidia.com/nemo/relay/dev/configure-plugins/observability/atof).

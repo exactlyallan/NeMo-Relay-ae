@@ -108,14 +108,18 @@ the failed check points to a broken or missing install.
 
 ## Hand Off After Install
 
-- For a first working scope, tool call, LLM call, or trial plugin setup ->
-  `nemo-relay-get-started`
-- For local CLI host-plugin workflow -> NeMo Relay CLI docs or host-specific
-  setup, not app runtime setup
-- For runtime configuration, plugin files, observability, or adaptive behavior
-  -> the matching plugin or instrumentation skill
+Choose the next workflow from the user's immediate outcome:
+
+- Use `nemo-relay-get-started` for a first working scope, tool call, LLM call,
+  or trial plugin setup.
+- Use the NeMo Relay CLI documentation or host-specific setup for a local CLI
+  host-plugin workflow, not application runtime setup.
+- Use the matching plugin or instrumentation skill for runtime configuration,
+  plugin files, observability, or adaptive behavior.
 
 ## Common Mistakes
+
+Avoid these installation-scope mistakes:
 
 - Using repository development setup when the user only needs a published
   package.
@@ -130,7 +134,9 @@ the failed check points to a broken or missing install.
 
 ## Public Docs To Reference
 
-- Installation: https://docs.nvidia.com/nemo/relay/getting-started/installation
-- Prerequisites: https://docs.nvidia.com/nemo/relay/getting-started/prerequisites
-- CLI transparent run: https://docs.nvidia.com/nemo/relay/dev/nemo-relay-cli/basic-usage#transparent-run
-- Configuration and setup handoff: https://docs.nvidia.com/nemo/relay/getting-started/configuration
+Use these public entry points to confirm current installation guidance:
+
+- [Installation](https://docs.nvidia.com/nemo/relay/getting-started/installation)
+- [Prerequisites](https://docs.nvidia.com/nemo/relay/getting-started/prerequisites)
+- [CLI transparent run](https://docs.nvidia.com/nemo/relay/dev/nemo-relay-cli/basic-usage#transparent-run)
+- [Configuration and setup handoff](https://docs.nvidia.com/nemo/relay/getting-started/configuration)

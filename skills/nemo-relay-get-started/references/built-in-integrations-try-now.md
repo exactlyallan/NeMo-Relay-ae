@@ -14,7 +14,7 @@ tools, or provider calls.
 
 Choose only the integration already present in the target:
 
-| Existing surface | Relay attachment | Current support boundary |
+| Existing Surface | Relay Attachment | Current Support Boundary |
 |---|---|---|
 | LangChain | Maintained middleware and callbacks | Observability, security, and optimization |
 | LangGraph | Maintained callbacks around graph execution | Observability, security, and optimization |
@@ -33,10 +33,10 @@ project's package manager.
 
 Then use only the matching maintained guide:
 
-- LangChain: https://docs.nvidia.com/nemo/relay/dev/supported-integrations/langchain
-- LangGraph: https://docs.nvidia.com/nemo/relay/dev/supported-integrations/langgraph
-- Deep Agents: https://docs.nvidia.com/nemo/relay/dev/supported-integrations/deepagents
-- OpenClaw: https://docs.nvidia.com/nemo/relay/dev/supported-integrations/openclaw-plugin
+- [LangChain integration](https://docs.nvidia.com/nemo/relay/dev/supported-integrations/langchain)
+- [LangGraph integration](https://docs.nvidia.com/nemo/relay/dev/supported-integrations/langgraph)
+- [Deep Agents integration](https://docs.nvidia.com/nemo/relay/dev/supported-integrations/deepagents)
+- [OpenClaw integration](https://docs.nvidia.com/nemo/relay/dev/supported-integrations/openclaw-plugin)
 
 Before editing, identify the smallest documented attachment point in the
 existing agent or workflow. Show the proposed middleware, callback, or plugin
@@ -80,5 +80,5 @@ After the first proof:
 - Use `nemo-relay-instrument-calls` only for application-owned calls that remain
   outside the integration.
 
-Supported integrations entry point:
-https://docs.nvidia.com/nemo/relay/dev/supported-integrations/about
+For the complete maintained surface, see
+[Supported Integrations](https://docs.nvidia.com/nemo/relay/dev/supported-integrations/about).

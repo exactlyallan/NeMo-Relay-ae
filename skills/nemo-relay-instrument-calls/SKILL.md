@@ -64,17 +64,21 @@ needs to run them through NeMo Relay correctly.
 
 ## Use Another Skill When
 
-- You need traces, ATIF, or export setup -> `nemo-relay-plugin-observability`
-- You are debugging missing events or load failures ->
-  `nemo-relay-debug-runtime-integration`
-- You need per-request isolation or worker-pool advice ->
-  `nemo-relay-instrument-context-isolation`
-- You need reusable config-activated runtime behavior ->
-  `nemo-relay-plugin-build`
+Choose another skill when the task requires a neighboring workflow:
+
+- Use `nemo-relay-plugin-observability` for traces, ATIF, or export setup.
+- Use `nemo-relay-debug-runtime-integration` to debug missing events or load
+  failures.
+- Use `nemo-relay-instrument-context-isolation` for per-request isolation or
+  worker-pool guidance.
+- Use `nemo-relay-plugin-build` for reusable, configuration-activated runtime
+  behavior.
 
 ## Related Skills
 
-- `nemo-relay-get-started`
-- `nemo-relay-instrument-typed-wrappers`
-- `nemo-relay-plugin-observability`
-- `nemo-relay-plugin-build`
+Use these skills for adjacent workflows:
+
+- Start onboarding with `nemo-relay-get-started`.
+- Add typed wrappers with `nemo-relay-instrument-typed-wrappers`.
+- Configure export with `nemo-relay-plugin-observability`.
+- Package reusable behavior with `nemo-relay-plugin-build`.

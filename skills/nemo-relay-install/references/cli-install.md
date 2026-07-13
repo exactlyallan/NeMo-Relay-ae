@@ -17,6 +17,8 @@ local gateway use, or explicit persistent host-plugin installation.
 
 ## Check Prerequisites
 
+Confirm these prerequisites before selecting an installation command:
+
 - Confirm the operating system and architecture have a published CLI asset.
 - Use Cargo when the user prefers a source build or needs an unsupported
   platform.
@@ -40,7 +42,7 @@ irm https://raw.githubusercontent.com/NVIDIA/NeMo-Relay/main/install.ps1 | iex
 The published installer verifies the checksum before replacing an existing
 binary and does not invoke `sudo`.
 
-For a source build:
+To compile and install the published Cargo package:
 
 ```bash
 cargo install nemo-relay-cli
@@ -112,10 +114,10 @@ The recovery file must include both supported exits:
 Avoid `resume --last` when crossing providers. Never copy or rewrite
 `~/.codex/sessions` or Codex SQLite state as a migration workaround.
 
-Public references:
+Use these references for the supported installation and host-integration paths:
 
-- Installation: https://docs.nvidia.com/nemo/relay/getting-started/installation
-- Transparent run: https://docs.nvidia.com/nemo/relay/dev/nemo-relay-cli/basic-usage#transparent-run
-- Codex integration: https://docs.nvidia.com/nemo/relay/dev/nemo-relay-cli/codex
-- Persistent plugin installation: https://docs.nvidia.com/nemo/relay/dev/nemo-relay-cli/plugin-installation
-- Codex Desktop provider-filter bug: https://github.com/openai/codex/issues/24648
+- [Installation](https://docs.nvidia.com/nemo/relay/getting-started/installation)
+- [Transparent run](https://docs.nvidia.com/nemo/relay/dev/nemo-relay-cli/basic-usage#transparent-run)
+- [Codex integration](https://docs.nvidia.com/nemo/relay/dev/nemo-relay-cli/codex)
+- [Persistent plugin installation](https://docs.nvidia.com/nemo/relay/dev/nemo-relay-cli/plugin-installation)
+- [Codex Desktop provider-filter bug](https://github.com/openai/codex/issues/24648)

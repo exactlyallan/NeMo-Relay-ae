@@ -31,15 +31,19 @@ configuration to the maintained Hermes guidance.
 
 ## LangChain, LangGraph, Or Deep Agents
 
-Install only the extras needed by the target. When all three are present:
+Install only the extras needed by the target. Preserve the project's existing
+Python package manager. For example, when all three integrations are present in
+a `uv`-managed project:
 
 ```bash
 uv add "nemo-relay[langchain,langgraph,deepagents]"
 ```
 
-For a narrower application, remove extras that are not used. Verify the package
+Use the equivalent `poetry add`, `pdm add`, or environment-scoped
+`python -m pip install` command when that manager already owns the project. For
+a narrower application, remove extras that are not used. Verify the package
 manager result, then defer callbacks and runtime attachment to the matching
 maintained integration guide.
 
-Supported integrations:
-https://docs.nvidia.com/nemo/relay/dev/supported-integrations/about
+For the complete maintained surface, see
+[Supported Integrations](https://docs.nvidia.com/nemo/relay/dev/supported-integrations/about).
