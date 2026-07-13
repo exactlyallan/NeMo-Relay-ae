@@ -13,8 +13,8 @@ and applications.
 If you are developing NeMo Relay itself, changing core or binding APIs,
 maintaining repository infrastructure, or preparing a Relay contribution, use
 the [Relay maintainer skills](../.agents/skills/README.md) in `.agents/skills/`
-instead. The `.claude/skills`, `.codex/skills`, and `.cursor/skills` directories
-expose that maintainer set to specific coding agents.
+instead. The `.claude/skills` directory
+expose that maintainer set to Claude Code.
 
 ## Start Here
 
