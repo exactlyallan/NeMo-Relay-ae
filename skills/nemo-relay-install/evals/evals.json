@@ -25,6 +25,7 @@
       "The agent selected the Python package install path because the app owns the Python dependency",
       "The agent loaded references/language-packages.md for the selected path",
       "The agent inspected the project metadata and lockfile before choosing a package-manager command",
+      "The agent checked for conflicting package-manager metadata or lockfiles before changing the project",
       "The agent recommended poetry add nemo-relay and did not introduce uv, pip, or another package manager",
       "The agent suggested import verification without writing a first scope or LLM call",
       "The agent did not continue into observability, plugin configuration, or quick-start setup",

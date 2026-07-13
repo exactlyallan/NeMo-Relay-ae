@@ -12,7 +12,14 @@ only the package needed for the selected language.
 ## Python
 
 Require Python 3.11 or newer. Inspect `pyproject.toml`, its build metadata, and
-the project lockfiles before choosing a command. Preserve the declared manager:
+the project lockfiles before choosing a command. Use explicit project
+instructions and manager-specific `pyproject.toml` configuration as the source
+of truth. When those signals are absent, use a single manager-specific lockfile.
+If metadata and lockfiles conflict, or more than one manager appears active,
+show the conflict and ask which manager is authoritative before changing the
+project.
+
+After resolving any conflict, preserve the selected manager:
 
 - Use `uv add nemo-relay` when `uv.lock` or existing project instructions select
   `uv`.
@@ -46,7 +53,14 @@ python -c "import nemo_relay"
 ## Node.js
 
 Require Node.js 24 or newer and an existing `package.json`. Inspect its
-`packageManager` field and lockfiles before choosing a command:
+`packageManager` field and lockfiles before choosing a command. Treat
+`packageManager` as authoritative. If it disagrees with an existing lockfile,
+show the mismatch and ask before running an install that could rewrite the stale
+lockfile. Without `packageManager`, use a single lockfile to select the manager;
+when multiple lockfiles exist, ask which one is authoritative before changing
+the project.
+
+After resolving any conflict, use the selected manager:
 
 - Use `npm install nemo-relay-node` for `package-lock.json` or
   `npm-shrinkwrap.json`.

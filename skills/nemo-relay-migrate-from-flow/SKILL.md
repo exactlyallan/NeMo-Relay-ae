@@ -16,9 +16,10 @@ plus language-specific validation, not a behavior rewrite.
 
 1. Inspect the working tree and identify touched surfaces: Rust, Python,
    Node.js, Go, C FFI, CLI/config, docs, or integrations.
-2. Resolve `<skill-directory>` to the directory containing this `SKILL.md`, then
-   run the bundled helper in dry-run mode before editing:
-   `python <skill-directory>/scripts/migrate_from_nemo_flow.py <path> --rename-paths`
+2. Resolve `SKILL_DIR` to the absolute directory containing this `SKILL.md` and
+   `TARGET_PATH` to the source repository or target project. Run the bundled
+   helper in dry-run mode before editing:
+   `python3 "$SKILL_DIR/scripts/migrate_from_nemo_flow.py" "$TARGET_PATH" --rename-paths`
 3. Review the reported text edits and path renames. If the scope is correct,
    rerun with `--write --rename-paths`.
 4. Apply language-specific cleanup for package manager lockfiles, generated
@@ -69,8 +70,8 @@ or intentional compatibility names.
 
 ## Automation Helper
 
-Use `<skill-directory>/scripts/migrate_from_nemo_flow.py` for first-pass edits.
-The helper:
+Use `$SKILL_DIR/scripts/migrate_from_nemo_flow.py` for first-pass edits. The
+helper:
 
 - runs as a dry run unless `--write` is passed
 - skips common vendor, build, cache, and generated directories
@@ -79,12 +80,16 @@ The helper:
 - rewrites only explicit NeMo Flow identifiers, package names, repository names,
   config paths, headers, environment variables, and FFI type prefixes
 
-Resolve `<skill-directory>` to the directory containing this `SKILL.md`. Pass
-either the source repository or the user's target project as `<path>`:
+Set shell-safe absolute paths before invoking the helper. Replace the example
+values with the resolved skill directory and either the source repository or the
+user's target project:
 
 ```bash
-python <skill-directory>/scripts/migrate_from_nemo_flow.py <path> --rename-paths
-python <skill-directory>/scripts/migrate_from_nemo_flow.py <path> --write --rename-paths
+SKILL_DIR="/resolved/absolute/path/to/nemo-relay-migrate-from-flow"
+TARGET_PATH="/resolved/absolute/path/to/target-project"
+
+python3 "$SKILL_DIR/scripts/migrate_from_nemo_flow.py" "$TARGET_PATH" --rename-paths
+python3 "$SKILL_DIR/scripts/migrate_from_nemo_flow.py" "$TARGET_PATH" --write --rename-paths
 ```
 
 Use `--include-lockfiles` only when the user wants lockfiles edited directly;

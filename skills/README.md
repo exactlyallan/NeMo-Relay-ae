@@ -19,6 +19,8 @@ Code.
 
 ## Start Here
 
+Choose the entry point that matches the user's current outcome:
+
 - **New to Relay**: use [`nemo-relay-install`](nemo-relay-install/SKILL.md), then
   [`nemo-relay-get-started`](nemo-relay-get-started/SKILL.md).
 - **Want the fastest proof of value**: use
@@ -40,12 +42,16 @@ Code.
 
 ## Onboarding
 
+Use this table for installation and first-value onboarding:
+
 | Skill | Use It When |
 |---|---|
 | [`nemo-relay-install`](nemo-relay-install/SKILL.md) | Choose and install the CLI, a language package, or a maintained framework or harness integration. |
 | [`nemo-relay-get-started`](nemo-relay-get-started/SKILL.md) | Reach a first observable Relay result through the least complicated applicable try-now path. |
 
 ## Instrument Applications
+
+Use this table when an application directly owns the execution boundary:
 
 | Skill | Use It When |
 |---|---|
@@ -55,6 +61,8 @@ Code.
 
 ## Configure And Build Plugins
 
+Use this table to select reusable Relay behavior or output:
+
 | Skill | Use It When |
 |---|---|
 | [`nemo-relay-plugin-observability`](nemo-relay-plugin-observability/SKILL.md) | Inspect or export Relay activity through subscribers, ATOF, ATIF, OpenTelemetry, or OpenInference. This is the recommended first plugin for most users. |
@@ -62,6 +70,8 @@ Code.
 | [`nemo-relay-plugin-build`](nemo-relay-plugin-build/SKILL.md) | Package reusable runtime behavior as a validated, configuration-driven plugin for applications or integrations. |
 
 ## Migrate And Troubleshoot
+
+Use this table for existing integrations that need migration or diagnosis:
 
 | Skill | Use It When |
 |---|---|
