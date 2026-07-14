@@ -2249,6 +2249,43 @@ def validate_plugin_config(config: object) -> _JsonObject:
     """
     ...
 
+class _PluginHostActivation:
+    """Native owner for one process-wide dynamic plugin host."""
+
+    @property
+    def report(self) -> _JsonObject:
+        """Return the validation report captured during activation."""
+        ...
+
+    @property
+    def is_active(self) -> bool:
+        """Return whether this activation handle has not begun teardown.
+
+        ``False`` does not guarantee another process-wide activation can start;
+        failed teardown may intentionally retain the activation owner.
+        """
+        ...
+
+    def close(self) -> Awaitable[None]:
+        """Clear and unload this activation; repeated calls are safe."""
+        ...
+
+def initialize_with_dynamic_plugins(config: object, dynamic_plugins: object) -> Awaitable[_PluginHostActivation]:
+    """Initialize registered components with dynamic plugins as one owned host.
+
+    Args:
+        config: Base plugin configuration object.
+        dynamic_plugins: Sequence of dynamic plugin activation specifications.
+
+    Returns:
+        Awaitable resolving to the native activation owner.
+
+    Exceptional flow:
+        Invalid configuration, load, ownership, and registration errors are
+        raised through the awaitable.
+    """
+    ...
+
 def initialize_plugins(config: object) -> Awaitable[_JsonObject]:
     """Validate and activate plugin configuration.
 
