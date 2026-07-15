@@ -27,11 +27,22 @@ or [Concepts](/about-nemo-relay/concepts) first.
 
 Install [NVIDIA agent skills](https://docs.nvidia.com/skills) to give
 compatible coding agents product-specific Relay workflows and references. After
-the NeMo Relay skills are published in `nvidia/skills`, install the
-getting-started skill without cloning the catalog:
+the NeMo Relay skills are published in `nvidia/skills`, install the full Relay
+skill set without cloning the catalog:
 
 ```bash
-npx skills add nvidia/skills --skill nemo-relay-get-started --agent codex
+npx skills add nvidia/skills \
+  --skill nemo-relay-install \
+  --skill nemo-relay-get-started \
+  --skill nemo-relay-instrument-calls \
+  --skill nemo-relay-instrument-context-isolation \
+  --skill nemo-relay-instrument-typed-wrappers \
+  --skill nemo-relay-plugin-observability \
+  --skill nemo-relay-plugin-adaptive-tuning \
+  --skill nemo-relay-plugin-build \
+  --skill nemo-relay-migrate-from-flow \
+  --skill nemo-relay-debug-runtime-integration \
+  --agent codex
 ```
 
 Use `--agent claude-code`, `--agent cursor`, or another supported agent target

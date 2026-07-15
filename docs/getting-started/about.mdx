@@ -21,11 +21,22 @@ configuration.
 
 Install [NVIDIA agent skills](https://docs.nvidia.com/skills) to give
 compatible coding agents product-specific Relay workflows and references. After
-the NeMo Relay skills are published in `nvidia/skills`, install the
-getting-started skill without cloning the catalog:
+the NeMo Relay skills are published in `nvidia/skills`, install the full Relay
+skill set without cloning the catalog:
 
 ```bash
-npx skills add nvidia/skills --skill nemo-relay-get-started --agent codex
+npx skills add nvidia/skills \
+  --skill nemo-relay-install \
+  --skill nemo-relay-get-started \
+  --skill nemo-relay-instrument-calls \
+  --skill nemo-relay-instrument-context-isolation \
+  --skill nemo-relay-instrument-typed-wrappers \
+  --skill nemo-relay-plugin-observability \
+  --skill nemo-relay-plugin-adaptive-tuning \
+  --skill nemo-relay-plugin-build \
+  --skill nemo-relay-migrate-from-flow \
+  --skill nemo-relay-debug-runtime-integration \
+  --agent codex
 ```
 
 Use `--agent claude-code`, `--agent cursor`, or another supported agent target
@@ -44,30 +55,31 @@ plugins, or validating emitted events.
 
 ## Find the Right Starting Point
 
-Start from the destination or outcome that matches your task. The linked page
-points you to the setup, configuration, and validation steps for that path.
+Start with the fastest path that can prove Relay is working, then move toward
+more involved integration and development workflows only when you need them.
 
-- **Direct Python, Node.js, or Rust application APIs:** Application code owns
-  callback placement, provider authentication, and plugin initialization. Start
-  with [Quick Start](/getting-started/quick-start), then use
-  [Instrument Applications](/instrument-applications/about) when you own the
-  tool or LLM call site.
-- **LangChain, LangGraph, Deep Agents, or OpenClaw:** Start with
-  [Supported Integrations](/supported-integrations/about) to choose the
-  maintained path and support level. Local wiring still belongs to the
-  application, framework, or OpenClaw plugin configuration.
-- **New framework, orchestration, SDK, or provider integration:** The framework
-  or adapter owns scheduling, retries, callbacks, and provider payloads. Start
-  with [Integrate into Frameworks](/integrate-into-frameworks/about).
-- **Local Claude Code, Codex, or Hermes runs:** The coding-agent harness owns
-  invocation while Relay observes hooks, gateway-routed model traffic, and
-  exporter output. Start with [NeMo Relay CLI](/nemo-relay-cli/about).
-- **Reusable runtime behavior across services or teams:** Runtime plugin
-  configuration owns reusable middleware, subscribers, exporters, model pricing,
-  policy, or adaptive behavior. Start with [Build Plugins](/build-plugins/about),
-  use [Observability](/configure-plugins/observability/about) for export setup,
-  and use [Adaptive](/configure-plugins/adaptive/about) after baseline
-  instrumentation is working.
+- **Try now with the CLI:** Use [NeMo Relay CLI](/nemo-relay-cli/about) when a
+  local Claude Code, Codex, or Hermes coding-agent harness owns invocation.
+  Relay can observe hooks, gateway-routed model traffic, and exporter output
+  without changing application code.
+- **Use a supported integration:** Start with
+  [Supported Integrations](/supported-integrations/about) when LangChain,
+  LangGraph, Deep Agents, or OpenClaw already owns scheduling, callbacks, tool
+  execution, provider payloads, or agent lifecycle hooks.
+- **Instrument application-owned calls:** Start with
+  [Quick Start](/getting-started/quick-start), then use
+  [Instrument Applications](/instrument-applications/about) when your Python,
+  Node.js, or Rust application owns the tool or LLM call site.
+- **Build a custom framework or provider integration:** Use
+  [Integrate into Frameworks](/integrate-into-frameworks/about) when a new
+  framework, orchestration layer, SDK, or provider adapter owns scheduling,
+  retries, callbacks, and provider payloads.
+- **Package reusable runtime behavior:** Use
+  [Build Plugins](/build-plugins/about) for shared middleware, subscribers,
+  exporters, model pricing, policy, or adaptive behavior. Use
+  [Observability](/configure-plugins/observability/about) for export setup and
+  [Adaptive](/configure-plugins/adaptive/about) after baseline instrumentation
+  is working.
 
 ## Getting Started Process
 
