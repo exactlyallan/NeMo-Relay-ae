@@ -91,6 +91,13 @@ pub(crate) async fn serve_with_dynamic(
     ready_file: Option<&Path>,
     bootstrap_shutdown_token: Option<String>,
 ) -> Result<(), CliError> {
+    let bind = config.bind.to_string();
+    log::info!(
+        target: "nemo_relay.server",
+        event = "server_starting",
+        bind = bind.as_str();
+        "Gateway server is starting"
+    );
     let listener = bind_listener(config.bind).await?;
     print_startup_status(listener.local_addr()?, &config);
     let bootstrap_fingerprint = managed_bootstrap
@@ -304,6 +311,14 @@ async fn serve_listener_with_dynamic_inner(
     if let Some(path) = ready_file {
         write_ready_file(path, local_address, &instance_id)?;
     }
+    let address = local_address.to_string();
+    log::info!(
+        target: "nemo_relay.server",
+        event = "server_listening",
+        address = address.as_str(),
+        instance_id = instance_id.as_str();
+        "Gateway server is listening"
+    );
     let idle_shutdown: Option<ShutdownFuture> =
         if matches!(&shutdown_mode, None | Some(ShutdownMode::ProcessSignal)) {
             plugin_idle_timeout()?.map(|timeout| {
@@ -318,6 +333,12 @@ async fn serve_listener_with_dynamic_inner(
         };
     let shutdown = server_shutdown_future(shutdown_mode, idle_shutdown);
     let shutdown = combine_shutdown_futures(shutdown, bootstrap_shutdown_rx);
+    log::info!(
+        target: "nemo_relay.server",
+        event = "server_shutdown_started",
+        instance_id = instance_id.as_str();
+        "Gateway server shutdown started"
+    );
     let serve_result = match shutdown {
         Some(shutdown) => {
             axum::serve(listener, app)
@@ -326,7 +347,7 @@ async fn serve_listener_with_dynamic_inner(
         }
         None => axum::serve(listener, app).await,
     };
-    finish_server_shutdown(serve_result, &sessions, plugin_activation).await
+    finish_server_shutdown(serve_result, &sessions, plugin_activation, &instance_id).await
 }
 
 fn server_shutdown_future(
@@ -373,6 +394,7 @@ async fn finish_server_shutdown(
     serve_result: std::io::Result<()>,
     sessions: &SessionManager,
     plugin_activation: Option<ServerPluginActivation>,
+    instance_id: &str,
 ) -> Result<(), CliError> {
     let close_result = sessions.close_all("gateway_shutdown").await;
     let flush_result = nemo_relay::api::runtime::flush_subscribers().map_err(CliError::from);
@@ -380,20 +402,85 @@ async fn finish_server_shutdown(
         .map(ServerPluginActivation::clear)
         .unwrap_or(Ok(()));
     if let Err(serve_error) = serve_result {
+        log::error!(
+            target: "nemo_relay.server",
+            event = "server_failed",
+            instance_id,
+            error_kind = "io";
+            "Gateway server failed"
+        );
         if let Err(close_error) = close_result {
-            eprintln!("session teardown failed after server error: {close_error}");
+            log::error!(
+                target: "nemo_relay.server",
+                event = "server_teardown_failed",
+                instance_id,
+                component = "sessions",
+                error_kind = close_error.log_kind();
+                "Gateway server teardown failed"
+            );
         }
         if let Err(flush_error) = flush_result {
-            eprintln!("subscriber flush failed after server error: {flush_error}");
+            log::error!(
+                target: "nemo_relay.server",
+                event = "server_teardown_failed",
+                instance_id,
+                component = "subscribers",
+                error_kind = flush_error.log_kind();
+                "Gateway server teardown failed"
+            );
         }
         if let Err(clear_error) = clear_result {
-            eprintln!("plugin teardown failed after server error: {clear_error}");
+            log::error!(
+                target: "nemo_relay.server",
+                event = "server_teardown_failed",
+                instance_id,
+                component = "plugins",
+                error_kind = clear_error.log_kind();
+                "Gateway server teardown failed"
+            );
         }
         return Err(serve_error.into());
     }
+    if let Err(error) = &close_result {
+        log::error!(
+            target: "nemo_relay.server",
+            event = "server_teardown_failed",
+            instance_id,
+            component = "sessions",
+            error_kind = error.log_kind();
+            "Gateway server teardown failed"
+        );
+    }
+    if let Err(error) = &flush_result {
+        log::error!(
+            target: "nemo_relay.server",
+            event = "server_teardown_failed",
+            instance_id,
+            component = "subscribers",
+            error_kind = error.log_kind();
+            "Gateway server teardown failed"
+        );
+    }
+    if let Err(error) = &clear_result {
+        log::error!(
+            target: "nemo_relay.server",
+            event = "server_teardown_failed",
+            instance_id,
+            component = "plugins",
+            error_kind = error.log_kind();
+            "Gateway server teardown failed"
+        );
+    }
     close_result?;
     flush_result?;
-    clear_result
+    clear_result?;
+    log::info!(
+        target: "nemo_relay.server",
+        event = "server_stopped",
+        instance_id;
+        "Gateway server stopped"
+    );
+    Ok(())
 }
 
 async fn shutdown_signal() {
@@ -486,8 +573,17 @@ impl AppState {
         headers: &mut HeaderMap,
     ) -> Result<crate::provider_auth::ProviderRequestAuthorization, CliError> {
         if let Some(proxy) = &self.transparent_proxy_credential {
+            let source_credential = proxy.consume(headers).inspect_err(|error| {
+                log::warn!(
+                    target: "nemo_relay.gateway",
+                    event = "request_rejected",
+                    reason = "transparent_proxy_authentication",
+                    error_kind = error.log_kind();
+                    "Gateway request was rejected during transparent proxy authentication"
+                );
+            })?;
             return Ok(crate::provider_auth::ProviderRequestAuthorization {
-                source_credential: proxy.consume(headers)?,
+                source_credential,
                 allow_environment_provider_auth: true,
             });
         }

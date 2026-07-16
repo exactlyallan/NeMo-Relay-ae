@@ -18,6 +18,7 @@ struct EnvScope {
 
 impl EnvScope {
     fn set(values: &[(&'static str, Option<&std::ffi::OsStr>)]) -> Self {
+        crate::test_support::enable_operational_logs();
         let guard = crate::test_support::ENV_TEST_LOCK
             .lock()
             .unwrap_or_else(|error| error.into_inner());
@@ -1606,6 +1607,7 @@ fn hook_write_helpers_cover_toml_escaping() {
 #[cfg(unix)]
 #[test]
 fn exit_code_preserves_normal_and_shell_wrapped_codes() {
+    let _cwd = crate::test_support::CwdTestScope::locked();
     let status = std::process::Command::new("/bin/sh")
         .args(["-c", "exit 7"])
         .status()
@@ -1623,8 +1625,10 @@ fn exit_code_preserves_normal_and_shell_wrapped_codes() {
 // Windows `.cmd` argv delivery is covered independently by `agent_process_tests`.
 #[cfg(unix)]
 #[tokio::test]
+#[allow(clippy::await_holding_lock)]
 async fn run_starts_gateway_injects_env_and_returns_agent_exit_code() {
     let temp = tempfile::tempdir().unwrap();
+    let _cwd = crate::test_support::CwdTestScope::locked();
     let config = temp.path().join("config.toml");
     std::fs::write(&config, "[upstream]\n").unwrap();
     let output = temp.path().join("env.txt");
@@ -1800,8 +1804,10 @@ async fn wait_for_health_reports_unready_gateway() {
 
 #[cfg(unix)]
 #[tokio::test]
+#[allow(clippy::await_holding_lock)]
 async fn gateway_failure_terminates_the_agent_and_restores_private_state() {
     let temp = tempfile::tempdir().unwrap();
+    let _cwd = crate::test_support::CwdTestScope::locked();
     let wrapper_pid_path = temp.path().join("wrapper.pid");
     let descendant_pid_path = temp.path().join("descendant.pid");
     let script = temp.path().join("test-agent");
@@ -1874,8 +1880,10 @@ async fn gateway_failure_terminates_the_agent_and_restores_private_state() {
 }
 
 #[tokio::test]
+#[allow(clippy::await_holding_lock)]
 async fn execute_live_run_reports_gateway_startup_error_when_health_check_fails() {
     let _guard = crate::test_support::PLUGIN_CONFIG_TEST_LOCK.lock().await;
+    let _cwd = crate::test_support::CwdTestScope::locked();
     let _env = EnvScope::without_managed_bootstrap();
     let _ = nemo_relay::plugin::clear_plugin_configuration();
     let resolved = ResolvedConfig {
@@ -1911,18 +1919,33 @@ async fn execute_live_run_reports_gateway_startup_error_when_health_check_fails(
         ..GatewayConfig::default()
     };
 
-    let error = execute_live_run(listener, gateway_config, &gateway_url, prepared)
-        .await
-        .unwrap_err()
-        .to_string();
+    let error = TransparentRun {
+        agent: CodingAgent::ClaudeCode,
+        prepared,
+        resolved: ResolvedConfig {
+            gateway: gateway_config,
+            ..resolved
+        },
+        dynamic_plugins: Vec::new(),
+        listener,
+        gateway_url,
+        dry_run: false,
+        print: false,
+    }
+    .execute()
+    .await
+    .unwrap_err()
+    .to_string();
 
     assert!(error.contains("ATOF mode"));
     assert!(!error.contains("gateway did not become ready"));
 }
 
 #[tokio::test]
+#[allow(clippy::await_holding_lock)]
 async fn execute_live_run_removes_hermes_overlay_when_health_check_fails() {
     let _guard = crate::test_support::PLUGIN_CONFIG_TEST_LOCK.lock().await;
+    let _cwd = crate::test_support::CwdTestScope::locked();
     let _env = EnvScope::without_managed_bootstrap();
     let _ = nemo_relay::plugin::clear_plugin_configuration();
     let temp = tempfile::tempdir().unwrap();

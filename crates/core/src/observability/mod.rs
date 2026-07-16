@@ -562,8 +562,13 @@ where
                 .to_string(),
         ),
         "UNSET" => opentelemetry::trace::Status::Unset,
-        other => {
-            eprintln!("Unrecognized OTEL status code in event metadata: {other}");
+        _ => {
+            log::warn!(
+                target: "nemo_relay.observability",
+                event = "invalid_status_code",
+                status_code = "invalid";
+                "Unrecognized OpenTelemetry status code; using unset status"
+            );
             opentelemetry::trace::Status::Unset
         }
     };
