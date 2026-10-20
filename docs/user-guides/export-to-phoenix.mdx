@@ -1,0 +1,64 @@
+---
+title: "Export Relay Traces to Phoenix"
+description: "Connect an existing Relay telemetry source to Phoenix and inspect correlated agent activity."
+position: 2
+---
+{/* SPDX-FileCopyrightText: Copyright (c) 2026, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+SPDX-License-Identifier: Apache-2.0 */}
+
+Use this guide when your team already runs an agent through NeMo Relay and wants
+to investigate its activity in Phoenix. The result is a Phoenix trace that
+contains the agent run and the model and tool work Relay observed. Phoenix
+receives the trace; Relay remains responsible for observing the running agent.
+
+## Choose the telemetry source
+
+Start with a Relay integration that observes the work you need to investigate.
+For a coding harness, check its coverage in the
+[support matrix](/reference/support-matrix) and its
+[CLI integration](/nemo-relay-cli/about). For an application or maintained
+framework integration, use
+[Instrument Applications](/instrument-applications/about) or
+[Supported Integrations](/supported-integrations/about). Exporting cannot fill in model or tool activity
+that the chosen integration did not observe.
+
+If Relay runs through a [managed daemon](/daemon/about), configure the exporter
+where the user's worker runs. The daemon broker routes traffic but does not load
+plugins; the worker must be able to reach Phoenix.
+
+## Connect Relay to Phoenix
+
+Identify the OTLP tracing endpoint for your Phoenix deployment. Phoenix Cloud
+and self-hosted Phoenix use different endpoint and authentication arrangements;
+use Phoenix's
+[endpoint guidance](https://arize.com/docs/phoenix/learn/faqs/what-is-my-phoenix-endpoint) and
+[authentication guidance](https://arize.com/docs/phoenix/deployment/authentication)
+for the deployment you operate.
+
+In Relay's [Observability plugin](/configure-plugins/observability/about),
+select the
+[OpenInference trace projection](/configure-plugins/observability/openinference)
+for the Phoenix destination. Set the endpoint, transport, service identity,
+and any required request headers using the
+[OpenTelemetry exporter configuration](/configure-plugins/observability/opentelemetry).
+Keep credentials in your
+deployment's secret-management path rather than in a shared guide or checked-in
+configuration. Apply [PII redaction](/configure-plugins/pii-redaction/about)
+before exporting payloads that your organization restricts.
+
+## Confirm the trace in Phoenix
+
+Inspect a real run that includes a model call and a tool action. In the intended
+Phoenix project, find the run by its service identity and time, then open its
+trace tree. Check that the agent activity and the model and tool spans belong to
+the same trace and that the attributes your team needs for investigation are
+present. Also inspect a representative payload to confirm the privacy policy
+produced the expected result.
+
+If the trace is absent, check exporter activation and delivery in
+[Relay's observability diagnostics](/configure-plugins/observability/configuration),
+then check Phoenix endpoint reachability and authorization from the Relay
+process. If the trace arrives but an activity type is absent, first check the
+capture boundary and the agent's actual path through Relay. For a managed
+daemon, also confirm that the request reached a ready worker rather than a
+pass-through route in [daemon operations](/daemon/operations).
