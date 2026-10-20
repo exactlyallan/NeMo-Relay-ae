@@ -1,0 +1,74 @@
+---
+title: "Reduce Agent Model Spend Without Sacrificing Task Quality"
+description: "Evaluate Switchyard routing in Relay against a fixed-model baseline using completed tasks, cost, and quality."
+position: 7
+---
+{/* SPDX-FileCopyrightText: Copyright (c) 2026, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+SPDX-License-Identifier: Apache-2.0 */}
+
+Use this guide when you have an agent workload that already runs through Relay
+and want to test whether model routing lowers the cost of completed work. The
+result is a measured comparison between a fixed-model baseline and a routed
+policy, including the quality and latency needed to judge whether the savings
+are usable.
+
+## Define a comparable workload
+
+Choose representative tasks, a fixed model that currently handles them, and
+the acceptance criteria for a good result. Record task completion, review or
+evaluation outcomes, latency, provider usage, and total cost for the baseline.
+Keep prompts, tools, provider versions, and scoring criteria comparable in the
+routed run. Include failures and retries in the comparison; cost per request
+alone can hide the cost of unfinished work.
+
+Confirm that the relevant model calls pass through a Relay-managed LLM path.
+For coding harnesses, check the
+[support matrix](/reference/support-matrix) and
+[daemon routing requirements](/daemon/configuration) before choosing the test
+population. Calls that bypass Relay cannot be routed or measured by this
+integration.
+
+## Apply a Switchyard route
+
+Use the separately published
+[Switchyard native plugin](https://nvidia-nemo.github.io/Switchyard/integrations/nemo_relay/)
+with a compatible Relay host. Check the bundle's manifest and release metadata
+for the supported Relay version; Switchyard is a discoverable plugin, not a
+built-in Relay routing component. Follow Relay's
+[discoverable-plugin setup](/configure-plugins/discoverable-plugins) for package
+trust, registration, and activation.
+
+Select an efficient candidate model, a capable fallback, and a routing policy
+appropriate for the task mix. In Switchyard's
+[deployment configuration](https://nvidia-nemo.github.io/Switchyard/integrations/nemo_relay/#set-up-the-plugin),
+each route ID becomes a model name callers can request through Relay. Only
+matching, supported model calls enter Switchyard; other calls continue through
+Relay's next handler. The plugin uses deployment-owned provider credentials,
+so review that boundary before rollout.
+
+## Account for all model work
+
+Enable the [Observability plugin](/configure-plugins/observability/about) for
+Relay's answer events and Switchyard's routing marks and metrics. Provide a
+validated [model-pricing catalog](/configure-plugins/model-pricing) when the
+provider does not report cost. The
+[Switchyard telemetry contract](https://nvidia-nemo.github.io/Switchyard/integrations/nemo_relay/#routing-telemetry)
+identifies the selected and served model, fallback, routing calls, token usage,
+and overhead.
+
+For a workload or time window, combine Relay's answer cost with the cost of
+Switchyard tokens classified as routing work, priced by target model. Do not
+count Switchyard answer tokens again: Relay already counts the answer it saw.
+Treat absent model usage or cost as unknown. The integration does not produce
+one combined savings figure, and its exported metric attributes do not carry
+Relay request identity for one-to-one cost reconciliation.
+
+## Decide whether routing improves the outcome
+
+Compare fixed-model and routed runs on completed-task cost, task success or
+review quality, latency, fallback frequency, and unknown-cost share. Inspect a
+sample of traces or routing marks to confirm that the selected and served
+models match the policy you intended. Expand the policy only where the routed
+run meets your preselected quality criterion and produces a credible cost
+improvement. If quality falls or usage is too incomplete to price, adjust the
+route or measurement before claiming savings.
