@@ -1,0 +1,62 @@
+---
+title: "Export Relay Traces to LangSmith"
+description: "Send existing Relay traces to a LangSmith project and inspect related agent, model, and tool work."
+position: 3
+---
+{/* SPDX-FileCopyrightText: Copyright (c) 2026, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+SPDX-License-Identifier: Apache-2.0 */}
+
+Use this guide when your organization uses LangSmith to investigate agent runs
+and wants Relay-observed activity in the same workspace. The result is a
+LangSmith trace for a real run, with the agent, model, and tool work that your
+Relay integration captures.
+
+## Establish the capture boundary
+
+Choose the Relay integration that sees the agent's actual execution path. A
+managed [coding-agent daemon](/daemon/about), a
+[supported framework integration](/supported-integrations/about), and an
+[instrumented application](/instrument-applications/about) expose different events. Check the relevant
+[support-matrix coverage](/reference/support-matrix) before treating a missing
+model or tool run in LangSmith as an export problem.
+
+If the source is a managed daemon, configure telemetry in the per-user worker's
+plugin environment and confirm that the worker can reach the LangSmith intake.
+The daemon broker itself does not load the exporter.
+
+## Direct traces to the intended project
+
+Choose your LangSmith SaaS region or self-hosted endpoint, a workspace
+credential, and the project that should contain these runs. LangSmith's
+[OpenTelemetry tracing guide](https://docs.langchain.com/langsmith/trace-with-opentelemetry)
+specifies the
+OTLP intake path, authentication and project headers, and attribute mapping.
+Relay's configured OTLP endpoint preserves an explicit URL path, so use the
+complete trace destination rather than relying on a generic base URL to add
+LangSmith's path.
+
+In the [Observability plugin](/configure-plugins/observability/about), enable
+one [OpenInference trace projection](/configure-plugins/observability/openinference)
+for that destination. Use the
+[OpenTelemetry exporter configuration](/configure-plugins/observability/opentelemetry)
+for the endpoint, transport,
+service identity, and headers. Keep the workspace credential in the
+deployment's secret-management path. Apply your
+[PII redaction policy](/configure-plugins/pii-redaction/about) before traces leave the Relay worker
+or application process.
+
+## Confirm the result in LangSmith
+
+Find a recent real run in the selected project and inspect its trace tree.
+Check that the agent run, observed model calls, and observed tool actions share
+the expected parentage. Confirm that the project, service identity, and any
+approved identifying attributes let your team find the run later. Inspect a
+representative trace to confirm that restricted payload fields were removed or
+transformed as intended.
+
+If nothing arrives, check exporter activation and delivery in
+[Relay's observability configuration](/configure-plugins/observability/configuration),
+then verify the endpoint region, credentials, and project selection. If only
+part of the run arrives, compare LangSmith's tree with what the Relay source
+actually captured before changing exporter settings. A LangSmith SDK is not
+required in the agent application solely to receive Relay's OTLP output.
