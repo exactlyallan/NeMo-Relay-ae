@@ -1,0 +1,53 @@
+---
+title: "Export Relay Traces to W&B Weave"
+description: "Send Relay-observed agent activity to a Weave project and inspect its agent, model, and tool spans."
+position: 4
+---
+{/* SPDX-FileCopyrightText: Copyright (c) 2026, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+SPDX-License-Identifier: Apache-2.0 */}
+
+Use this guide when your team investigates agents in W&B Weave and wants Relay
+activity in the same project. The result is a real run visible in Weave, with
+the agent, model, and tool spans that your Relay integration captures.
+
+## Choose the Relay source
+
+Attach Relay where it observes the work you need to investigate: a managed
+[coding-agent daemon](/daemon/about), a
+[supported framework integration](/supported-integrations/about), or an
+[instrumented application](/instrument-applications/about). Check the
+[support matrix](/reference/support-matrix) for that source before expecting
+every kind of model and tool activity in Weave. For a daemon deployment, the
+per-user worker must load the exporter and reach the Weave intake.
+
+## Route agent traces to the project
+
+Choose the W&B entity and Weave project that will own these traces. Weave's
+[Agents OTLP intake guide](https://github.com/wandb/docs/blob/main/weave/guides/tracking/trace-agents-otel.mdx)
+describes its trace endpoint, HTTP/protobuf transport, authentication, project
+routing, and GenAI span attributes. Set the project with the `wandb.entity` and
+`wandb.project` resource attributes or the `project_id` header. Keep the API
+key in the deployment's secret-management path.
+
+Enable a `gen_ai` trace projection in Relay's
+[Observability plugin](/configure-plugins/observability/about). It emits the
+agent, model, and tool operations that Weave's Agents view understands. Use
+Relay's [OpenTelemetry exporter configuration](/configure-plugins/observability/opentelemetry)
+for the complete trace URL, HTTP/protobuf transport, resource attributes, and
+authentication header. Use a trace-specific endpoint so Relay does not send
+logs or metrics to a trace-only intake. Apply the organization's
+[PII redaction policy](/configure-plugins/pii-redaction/about) before export.
+
+## Confirm the result in Weave
+
+Find the run in the selected project's Agents view. Check that a turn contains
+its observed model calls and tool actions, with the expected parentage, model
+identity, and token usage where your source provides them. Inspect a trace for
+restricted payload fields and confirm the applied privacy policy.
+
+If no trace arrives, verify the Weave endpoint, API key, and project routing
+alongside [Relay exporter diagnostics](/configure-plugins/observability/configuration).
+If spans arrive but the Agents view does not group them as expected, inspect
+the `gen_ai.operation.name` values and compare the trace with the Relay source's
+actual [capture coverage](/reference/support-matrix). A Weave SDK is not
+required in the agent application solely to receive Relay's OTLP spans.
