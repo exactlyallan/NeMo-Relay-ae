@@ -1,0 +1,59 @@
+---
+title: "Export Relay Traces to Datadog"
+description: "Bring Relay-observed agent activity into Datadog and inspect related agent, model, and tool spans."
+position: 5
+---
+{/* SPDX-FileCopyrightText: Copyright (c) 2026, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+SPDX-License-Identifier: Apache-2.0 */}
+
+Use this guide when Datadog is your organization's trace investigation
+platform. The result is a real agent run in Datadog, with the model and tool
+work observed by your Relay integration connected to that run.
+
+## Decide where Relay exports
+
+Select the Relay integration that sees the work: a managed
+[coding-agent daemon](/daemon/about), a
+[supported framework integration](/supported-integrations/about), or an
+[instrumented application](/instrument-applications/about). Check the
+[support matrix](/reference/support-matrix) to establish expected model and
+tool coverage. In a daemon deployment, the per-user worker loads the exporter;
+its host or network must be able to reach your chosen OTLP receiver.
+
+For production workloads, Datadog recommends an existing
+[Datadog Agent or OpenTelemetry Collector](https://docs.datadoghq.com/opentelemetry/setup/otlp_ingest/)
+as the receiving tier. Use your organization's receiver and its
+[OTLP ingestion settings](https://docs.datadoghq.com/opentelemetry/setup/otlp_ingest_in_the_agent/)
+or [Collector configuration](https://docs.datadoghq.com/opentelemetry/setup/collector_exporter/).
+Datadog also documents a
+[direct trace intake](https://docs.datadoghq.com/opentelemetry/setup/otlp_ingest/traces/)
+for environments where an Agent or Collector is not feasible. Choose the
+Datadog site, service name, and deployment environment your team uses to find
+related traces.
+
+## Export the trace projection
+
+Enable a trace projection through Relay's
+[Observability plugin](/configure-plugins/observability/about). Use
+[OpenInference](/configure-plugins/observability/openinference) when you want
+agent-specific span attributes alongside the trace structure. Configure the
+receiver URL, transport, service identity, and any required credentials in
+Relay's [OpenTelemetry exporter configuration](/configure-plugins/observability/opentelemetry).
+Keep credentials in the deployment's secret-management path. Apply your
+[PII redaction policy](/configure-plugins/pii-redaction/about) before telemetry
+leaves the Relay worker or application process.
+
+## Confirm the result in Datadog
+
+Find a recent run under the expected service and environment. Inspect the
+trace to confirm that the agent run and its observed model and tool work have
+the expected parentage. Check that the names and attributes your team uses for
+search and attribution are present, then inspect a representative span for
+restricted payload fields.
+
+If no trace arrives, check
+[Relay exporter diagnostics](/configure-plugins/observability/configuration)
+and the Agent, Collector, or direct intake for accepted OTLP traffic. If a
+trace is incomplete, compare its spans with the source's actual
+[capture coverage](/reference/support-matrix) and with any sampling or
+processing policy in the receiving tier.
