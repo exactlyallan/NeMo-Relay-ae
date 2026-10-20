@@ -1,0 +1,67 @@
+---
+title: "Govern Coding-Agent Activity Across Workstations"
+description: "Connect managed coding harnesses to enterprise audit, privacy, and cost pipelines without replacing developer workflows."
+position: 6
+---
+{/* SPDX-FileCopyrightText: Copyright (c) 2026, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+SPDX-License-Identifier: Apache-2.0 */}
+
+Use this guide when developers should keep working in their supported coding
+harnesses while an enterprise platform team manages how their activity is
+captured and exported. The result is a worker-backed session whose observable
+agent, model, and tool activity reaches an approved destination under a tested
+privacy and attribution policy.
+
+## Define the managed population and coverage
+
+List the harnesses, versions, operating systems, and network paths in your
+rollout. Check the [coding-agent support matrix](/reference/support-matrix) for
+Claude Code, Codex, and Pi coverage and limitations. Decide which sessions must
+use a Relay worker and whether a request without a bound worker is allowed to
+pass through. A provider response alone does not prove that Relay captured it.
+
+Choose a [local or remote daemon deployment](/daemon/about) for each group of
+workstations. A local daemon avoids a cross-network worker connection; a remote
+Linux daemon needs a trusted server connection and a return route to each
+client worker. The [daemon architecture](/daemon/architecture) explains which
+parts run centrally and which run under each user-machine identity.
+
+## Apply the organization policy at the worker
+
+Use [system configuration and managed clients](/daemon/configuration) to
+distribute administrator-owned settings, route credentials, and harness
+artifacts. Keep each identity's route credential distinct. Managed workers
+ignore personal Relay configuration, so put approved plugins and exporter
+settings in the worker's system configuration on the relevant client. For a
+remote deployment, follow the [server](/daemon/remote-server) and
+[client](/daemon/remote-clients) plans for trust, connectivity, and lifecycle.
+
+Set the [PII redaction policy](/configure-plugins/pii-redaction/about) for
+emitted LLM, tool, and scope payloads before they reach subscribers or
+exporters. Review the
+[redaction configuration](/configure-plugins/pii-redaction/configuration) against
+representative prompts and tool results; redaction changes emitted telemetry,
+not the real provider request or response. Select the
+[Observability plugin](/configure-plugins/observability/about) output your audit
+pipeline accepts, such as ATOF records or OTLP traces. For cost attribution,
+configure [model pricing](/configure-plugins/model-pricing) and verify that the
+observed response includes model identity and token usage. Relay leaves cost
+absent when it cannot estimate it; treat that as missing data rather than zero
+spend.
+
+## Accept a workstation rollout
+
+Use a real, non-sensitive session in each supported harness and deployment
+type. Follow [worker-backed verification](/daemon/operations#verify-worker-backed-operation)
+to confirm readiness, model routing, a harmless tool hook, and an observable
+plugin result. In the audit destination, locate the corresponding session and
+check event parentage, approved identity and project attributes, model and tool
+coverage, cost fields where available, and redacted payloads. Repeat after a
+policy change or upgrade.
+
+If activity is missing, first distinguish an unsupported or unobserved harness
+path from a worker or exporter failure. Use the
+[daemon operations guide](/daemon/operations) for worker state and logs, then
+check [exporter delivery](/configure-plugins/observability/configuration).
+Document any paths that bypass the managed worker before treating fleet-wide
+audit or cost figures as complete.
