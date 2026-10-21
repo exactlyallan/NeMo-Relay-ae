@@ -1,74 +1,160 @@
 ---
-title: "Reduce Agent Model Spend Without Sacrificing Task Quality"
-description: "Evaluate Switchyard routing in Relay against a fixed-model baseline using completed tasks, cost, and quality."
+title: "Reduce Agent Model Spend Without Sacrificing Task Quality with Switchyard"
+description: "Route eligible Relay model calls through Switchyard and compare completed-task cost, quality, and latency with a fixed-model baseline."
 position: 7
 ---
 {/* SPDX-FileCopyrightText: Copyright (c) 2026, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 SPDX-License-Identifier: Apache-2.0 */}
 
-Use this guide when you have an agent workload that already runs through Relay
-and want to test whether model routing lowers the cost of completed work. The
-result is a measured comparison between a fixed-model baseline and a routed
-policy, including the quality and latency needed to judge whether the savings
-are usable.
+Use Switchyard when an agent workload already crosses a Relay-managed model
+boundary and you want to test a lower-cost model mix. Switchyard's native Relay
+plugin selects an answer model for requests addressed to one of its route IDs;
+Relay still owns the application-facing call and exports the resulting
+telemetry. The outcome is a measured decision about completed-task cost and
+quality, rather than a cheaper price per individual request.
 
-## Define a comparable workload
+## Establish a comparable baseline
 
-Choose representative tasks, a fixed model that currently handles them, and
-the acceptance criteria for a good result. Record task completion, review or
-evaluation outcomes, latency, provider usage, and total cost for the baseline.
-Keep prompts, tools, provider versions, and scoring criteria comparable in the
-routed run. Include failures and retries in the comparison; cost per request
-alone can hide the cost of unfinished work.
+Select a representative set of tasks and the capable model that currently
+handles them. Keep task inputs, tools, provider versions, and review criteria
+stable for the routed run. Record every attempt, including failures and
+retries, so unfinished work does not disappear from the cost comparison.
 
-Confirm that the relevant model calls pass through a Relay-managed LLM path.
-For coding harnesses, check the
-[support matrix](/reference/support-matrix) and
-[daemon routing requirements](/daemon/configuration) before choosing the test
-population. Calls that bypass Relay cannot be routed or measured by this
-integration.
+| Record for each run | Why it matters |
+| --- | --- |
+| Accepted task result or review score | A less expensive response has no value if it misses the quality bar. |
+| Relay model identity, usage, and answer cost | This is the application-facing work to compare across policies. |
+| End-to-end latency and failure rate | Routing can add time or change failure behavior. |
+| Unpriced or missing usage | Missing measurements must remain visible in the decision. |
 
-## Apply a Switchyard route
+Confirm that the chosen calls actually pass through Relay. The Switchyard
+plugin handles Relay-managed OpenAI Chat Completions, OpenAI Responses, and
+Anthropic Messages calls whose `model` value matches a configured route ID.
+Unmatched names continue through Relay's next handler. Calls that bypass Relay
+cannot enter this comparison. For coding harnesses, check the
+[support matrix](/reference/support-matrix) before choosing the cohort.
 
-Use the separately published
-[Switchyard native plugin](https://nvidia-nemo.github.io/Switchyard/integrations/nemo_relay/)
-with a compatible Relay host. Check the bundle's manifest and release metadata
-for the supported Relay version; Switchyard is a discoverable plugin, not a
-built-in Relay routing component. Follow Relay's
-[discoverable-plugin setup](/configure-plugins/discoverable-plugins) for package
-trust, registration, and activation.
+## Put a route behind Relay
 
-Select an efficient candidate model, a capable fallback, and a routing policy
-appropriate for the task mix. In Switchyard's
-[deployment configuration](https://nvidia-nemo.github.io/Switchyard/integrations/nemo_relay/#set-up-the-plugin),
-each route ID becomes a model name callers can request through Relay. Only
-matching, supported model calls enter Switchyard; other calls continue through
-Relay's next handler. The plugin uses deployment-owned provider credentials,
-so review that boundary before rollout.
+Install a trusted, compatible Switchyard native-plugin bundle in the Relay
+process that handles the calls. The plugin is published separately from Relay;
+its current bundle requires Relay `>=0.10.0, <1.0.0`. Register its manifest,
+configure the deployment, enable it, and validate it before restarting that
+process. A managed coding-agent worker needs the plugin in its administrator
+managed configuration, rather than a developer's personal plugin directory.
 
-## Account for all model work
+The following Relay `plugins.toml` entry points the plugin at a Switchyard
+route file. Use the verified manifest path from your installed bundle. The
+`integrity_only` override applies to the published bundle's digest-verified,
+unsigned native library; a signed internal build can use your stricter trust
+policy instead.
 
-Enable the [Observability plugin](/configure-plugins/observability/about) for
-Relay's answer events and Switchyard's routing marks and metrics. Provide a
-validated [model-pricing catalog](/configure-plugins/model-pricing) when the
-provider does not report cost. The
+```toml
+[[plugins.dynamic]]
+manifest = "/opt/nemo-relay/plugins/switchyard/relay-plugin.toml"
+
+[plugins.dynamic.config]
+priority = 0
+switchyard_config_path = "/etc/switchyard/routes.toml"
+
+[plugins.policy.overrides."nvidia.switchyard"]
+attestation = "integrity_only"
+```
+
+Here is an illustrative `routes.toml` for a capability route. The judge
+estimates whether the efficient model can solve a request; the route uses the
+capable model when its threshold is not met. Replace all three model IDs and
+the gateway URL with models your deployment actually serves. The `0.8`
+threshold is only a starting value for evaluation, not a quality guarantee.
+
+```toml
+schema_version = 1
+
+[llm_clients.gateway]
+format = "openai_chat"
+base_url = "https://model-gateway.example.com/v1"
+api_key_env = "MODEL_GATEWAY_API_KEY"
+
+[targets.efficient]
+id = "org/efficient"
+llm_client = "gateway"
+
+[targets.capable]
+id = "org/capable"
+llm_client = "gateway"
+
+[targets.judge]
+id = "org/judge"
+llm_client = "gateway"
+
+[routes.agent]
+id = "switchyard/agent"
+type = "llm_classifier"
+mode = "capability"
+classifier_target = "judge"
+strong_target = "capable"
+weak_target = "efficient"
+base_threshold = 0.8
+```
+
+The caller requests `switchyard/agent` as its model name; Switchyard then calls
+the selected target through its configured client. Set `MODEL_GATEWAY_API_KEY`
+in the Relay process's secret-backed environment. The native plugin uses
+these deployment-owned provider credentials and does not forward a developer's
+provider credential to the target. Check the
+[plugin setup](https://nvidia-nemo.github.io/Switchyard/integrations/nemo_relay/#set-up-the-plugin)
+and [route schema](https://nvidia-nemo.github.io/Switchyard/reference/toml_schema/)
+for the bundle, validation, and other route algorithms.
+
+<Note>
+Switchyard can make a model call to decide where to route and another to
+answer. Some routes also retry or fall back. Include that work in the cost and
+latency evaluation. Test provider-specific request fields and streaming with
+your chosen caller and target formats before widening the route.
+</Note>
+
+## Measure the routed workload
+
+<Steps>
+<Step title="Run the same task set through the route">
+Keep the baseline's inputs and acceptance criteria. In the Relay traces, confirm
+that the expected requests use the route ID and inspect Switchyard's selected
+model, served model, fallback flag, and routing overhead. A selected model is
+not necessarily the model that finally answered.
+</Step>
+
+<Step title="Account for answer and routing work">
+Use Relay's answer cost, including a validated
+[model-pricing catalog](/configure-plugins/model-pricing) where the provider
+omits cost. Add only Switchyard token usage classified as `call_role = "routing"`,
+priced by its `target_model`. The `answer` token metrics describe the answer
+Relay already counted. Do not add them twice or sum the `total` token rollup
+with its constituent token types.
+</Step>
+
+<Step title="Decide against the preset quality bar">
+Compare accepted-task cost, task success or review score, latency, fallback
+frequency, and unknown-cost share with the fixed-model run. Expand only to task
+classes where the quality criterion holds and the measured cost improves. If
+usage is incomplete, treat that part of spend as unknown and fix the
+measurement before claiming savings.
+</Step>
+</Steps>
+
+```text
+Observed routed workload cost
+  = Relay answer cost
+  + Switchyard routing-token cost, priced by target model
+
+Cost per accepted task
+  = observed workload cost / accepted tasks
+```
+
+Switchyard emits routing marks and metrics through Relay's observability
+outputs. Its routing-token metric has `call_role`, `target_model`, and
+`token_type`; the exported metric does not include Relay request identity, so
+reconcile cost for a workload or time window rather than one trace. The
 [Switchyard telemetry contract](https://nvidia-nemo.github.io/Switchyard/integrations/nemo_relay/#routing-telemetry)
-identifies the selected and served model, fallback, routing calls, token usage,
-and overhead.
-
-For a workload or time window, combine Relay's answer cost with the cost of
-Switchyard tokens classified as routing work, priced by target model. Do not
-count Switchyard answer tokens again: Relay already counts the answer it saw.
-Treat absent model usage or cost as unknown. The integration does not produce
-one combined savings figure, and its exported metric attributes do not carry
-Relay request identity for one-to-one cost reconciliation.
-
-## Decide whether routing improves the outcome
-
-Compare fixed-model and routed runs on completed-task cost, task success or
-review quality, latency, fallback frequency, and unknown-cost share. Inspect a
-sample of traces or routing marks to confirm that the selected and served
-models match the policy you intended. Expand the policy only where the routed
-run meets your preselected quality criterion and produces a credible cost
-improvement. If quality falls or usage is too incomplete to price, adjust the
-route or measurement before claiming savings.
+and [Relay Observability configuration](/configure-plugins/observability/configuration)
+show how to inspect these signals. Missing usage or a dropped stream can leave
+part of the cost unknown.
