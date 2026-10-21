@@ -1,67 +1,147 @@
 ---
-title: "Govern Coding-Agent Activity Across Workstations"
-description: "Connect managed coding harnesses to enterprise audit, privacy, and cost pipelines without replacing developer workflows."
+title: "Deploy Relay to Govern Coding-Agents across an organization"
+description: "Operate supported coding harnesses through managed Relay workers and verify enterprise audit, privacy, and cost coverage."
 position: 6
 ---
 {/* SPDX-FileCopyrightText: Copyright (c) 2026, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 SPDX-License-Identifier: Apache-2.0 */}
 
-Use this guide when developers should keep working in their supported coding
-harnesses while an enterprise platform team manages how their activity is
-captured and exported. The result is a worker-backed session whose observable
-agent, model, and tool activity reaches an approved destination under a tested
-privacy and attribution policy.
+Use a Relay daemon when developers should keep their coding harnesses while
+your platform team owns their connection to providers and telemetry policy.
+The daemon gives supported harnesses a managed entry point and starts a Relay
+worker for each user-machine identity. The worker applies the approved plugins
+to activity it observes; the developer continues in Claude Code, Codex, or pi.
+A successful rollout produces an attributable, privacy-checked audit record for
+representative model and tool activity from each supported path.
 
-## Define the managed population and coverage
+## Decide what the deployment must cover
 
-List the harnesses, versions, operating systems, and network paths in your
-rollout. Check the [coding-agent support matrix](/reference/support-matrix) for
-Claude Code, Codex, and Pi coverage and limitations. Decide which sessions must
-use a Relay worker and whether a request without a bound worker is allowed to
-pass through. A provider response alone does not prove that Relay captured it.
+The harness's provider request must pass through its Relay worker for model
+telemetry or policy. Supported lifecycle hooks can add tool and session events,
+but their coverage differs by harness. Inventory the harness and version, the
+provider route it uses, the hooks you need, and the workstation operating system
+before claiming organization-wide coverage. The
+[coding-agent support matrix](/reference/support-matrix) gives the current
+limits for Claude Code, Codex, and pi.
 
-Choose a [local or remote daemon deployment](/daemon/about) for each group of
-workstations. A local daemon avoids a cross-network worker connection; a remote
-Linux daemon needs a trusted server connection and a return route to each
-client worker. The [daemon architecture](/daemon/architecture) explains which
-parts run centrally and which run under each user-machine identity.
+| Deployment | Where the daemon runs | Where the managed worker runs | Choose it when |
+| --- | --- | --- | --- |
+| Local | On each workstation | On that workstation under the user's identity | Local lifecycle and provider routing are acceptable. |
+| Remote | On a trusted Linux server | On each client workstation under the user's identity | You need a centrally operated entry point and can provide a trusted server connection plus a return route to the client worker. |
 
-## Apply the organization policy at the worker
+In either topology, a worker uses administrator-owned system configuration and
+managed harness settings. Users keep their normal provider login; a Relay route
+credential identifies the user-machine session and must be unique to that
+identity. The daemon does not turn an unsupported provider or hook path into a
+captured one. See [daemon architecture](/daemon/architecture) for the trust and
+network boundaries.
 
-Use [system configuration and managed clients](/daemon/configuration) to
-distribute administrator-owned settings, route credentials, and harness
-artifacts. Keep each identity's route credential distinct. Managed workers
-ignore personal Relay configuration, so put approved plugins and exporter
-settings in the worker's system configuration on the relevant client. For a
-remote deployment, follow the [server](/daemon/remote-server) and
-[client](/daemon/remote-clients) plans for trust, connectivity, and lifecycle.
+<Warning>
+A provider response can succeed through pass-through while the managed worker
+is absent. Decide whether pass-through is allowed for the cohort before rollout.
+For a required audit boundary, accept a session only after the worker and its
+plugin output are both visible.
+</Warning>
 
-Set the [PII redaction policy](/configure-plugins/pii-redaction/about) for
-emitted LLM, tool, and scope payloads before they reach subscribers or
-exporters. Review the
-[redaction configuration](/configure-plugins/pii-redaction/configuration) against
-representative prompts and tool results; redaction changes emitted telemetry,
-not the real provider request or response. Select the
-[Observability plugin](/configure-plugins/observability/about) output your audit
-pipeline accepts, such as ATOF records or OTLP traces. For cost attribution,
-configure [model pricing](/configure-plugins/model-pricing) and verify that the
-observed response includes model identity and token usage. Relay leaves cost
-absent when it cannot estimate it; treat that as missing data rather than zero
-spend.
+## Apply one managed worker policy
 
-## Accept a workstation rollout
+Place the approved `plugins.toml` in the client's system configuration so each
+managed worker receives the same policy. The following example redacts email
+addresses and API keys from supported emitted telemetry surfaces, then sends
+OpenInference traces to an organization-operated OTLP collector. Replace the
+illustrative endpoint and service name with your deployment values.
 
-Use a real, non-sensitive session in each supported harness and deployment
-type. Follow [worker-backed verification](/daemon/operations#verify-worker-backed-operation)
-to confirm readiness, model routing, a harmless tool hook, and an observable
-plugin result. In the audit destination, locate the corresponding session and
-check event parentage, approved identity and project attributes, model and tool
-coverage, cost fields where available, and redacted payloads. Repeat after a
-policy change or upgrade.
+```toml
+version = 1
 
-If activity is missing, first distinguish an unsupported or unobserved harness
-path from a worker or exporter failure. Use the
-[daemon operations guide](/daemon/operations) for worker state and logs, then
-check [exporter delivery](/configure-plugins/observability/configuration).
-Document any paths that bypass the managed worker before treating fleet-wide
-audit or cost figures as complete.
+[[components]]
+kind = "pii_redaction"
+enabled = true
+
+[components.config]
+version = 1
+
+[[components.config.profiles]]
+mode = "builtin"
+priority = 80
+
+[components.config.profiles.builtin]
+action = "redact"
+detector = "email"
+
+[[components.config.profiles]]
+mode = "builtin"
+priority = 90
+
+[components.config.profiles.builtin]
+action = "redact"
+detector = "api_key"
+
+[[components]]
+kind = "observability"
+enabled = true
+
+[components.config]
+version = 4
+
+[components.config.opentelemetry]
+enabled = true
+
+[[components.config.opentelemetry.endpoints]]
+type = "openinference"
+endpoint = "https://otel-gateway.example.com/v1/traces"
+transport = "http_binary"
+service_name = "coding-agents"
+```
+
+Redaction applies to emitted observability data; it does not change the real
+provider conversation. Test it with representative prompts and tool results
+before sending production telemetry. If your audit pipeline collects ATOF
+records instead of OTLP spans, configure that output under the same managed
+policy. Keep collector credentials in the worker's secret-backed environment,
+and avoid one writable log file shared by every worker.
+
+For cost attribution, add a validated model-pricing catalog and confirm that
+the observed response supplies model identity and token usage. Relay leaves
+cost absent when it cannot estimate it; an absent value is missing coverage,
+not zero spend. The [PII redaction](/configure-plugins/pii-redaction/configuration),
+[Observability](/configure-plugins/observability/configuration), and
+[model pricing](/configure-plugins/model-pricing) references provide the full
+policy fields.
+
+## Accept a workstation cohort
+
+<Steps>
+<Step title="Provision the managed identity and harness settings">
+Distribute the administrator-owned configuration and harness artifacts. Give
+each user-machine identity its own route credential, and confirm that the
+harness actually targets its daemon entry point. For a remote deployment, also
+confirm server trust and reachability back to the client worker.
+</Step>
+
+<Step title="Confirm worker-backed execution">
+Start a non-sensitive session in each supported harness. Confirm the worker is
+ready and bound to that session, then exercise one provider call and a harmless
+supported tool hook. A ready MCP connection alone is insufficient: the worker
+must receive the request, and an expected plugin result must appear.
+</Step>
+
+<Step title="Inspect the audit and privacy result">
+Find the same session in the approved collector. Check the attributed identity
+and service, agent/model/tool parentage where supported, model and token fields,
+and redacted payloads. Record unsupported paths and any requests that bypassed
+the worker before reporting fleet coverage or spend.
+</Step>
+</Steps>
+
+| If the evidence is missing | Check first |
+| --- | --- |
+| No worker or plugin result | Managed bundle, route credential, worker readiness, and pass-through policy. |
+| Model spans but no tool activity | Harness hook support and whether the tested action crosses a supported hook. |
+| Trace present but cost absent | Model identity, usage fields, and the pricing catalog. |
+| Unredacted sensitive field | The emitted surface and whether the configured detector covers it. |
+
+The [managed-client configuration](/daemon/configuration) and
+[worker-backed verification](/daemon/operations#verify-worker-backed-operation)
+provide the platform-specific provisioning and operational checks. Repeat the
+acceptance run after a policy, harness, or Relay upgrade.
