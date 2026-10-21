@@ -1,0 +1,66 @@
+---
+title: "Connect to Phoenix"
+description: "Export Relay OpenInference traces to Phoenix and confirm agent, model, and tool spans."
+position: 3
+---
+{/* SPDX-FileCopyrightText: Copyright (c) 2026, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+SPDX-License-Identifier: Apache-2.0 */}
+
+Use the [shared capture and verification path](/user-guides/connecting-to-observability-platforms/about)
+to send a real Relay-observed run to Phoenix. Phoenix receives OpenTelemetry
+traces; Relay supplies the agent, model, and tool spans it captured. Use the
+`openinference` projection so Phoenix can identify those span roles.
+
+## Point the worker or application at Phoenix
+
+Choose the tracing intake URL for your Phoenix Cloud space or self-hosted
+instance. The address used to open the Phoenix UI may differ from the OTLP
+intake URL. The following `plugins.toml` example shows a remote HTTPS intake;
+replace the illustrative host with your deployment's complete trace URL.
+
+```toml
+version = 1
+
+[[components]]
+kind = "observability"
+enabled = true
+
+[components.config]
+version = 4
+
+[components.config.opentelemetry]
+enabled = true
+
+[[components.config.opentelemetry.endpoints]]
+type = "openinference"
+endpoint = "https://phoenix.example.com/v1/traces"
+transport = "http_binary"
+service_name = "relay-agents"
+
+[components.config.opentelemetry.endpoints.header_env]
+authorization = "PHOENIX_AUTHORIZATION"
+```
+
+Set `PHOENIX_AUTHORIZATION` in the Relay worker or application environment to
+the full `Bearer <api-key>` header value when the intake requires an API key.
+For an unauthenticated loopback Phoenix instance, omit `header_env` and use
+that instance's local trace URL. Keep the credential outside the config file.
+Phoenix documents its [endpoint choices](https://arize.com/docs/phoenix/learn/faqs/what-is-my-phoenix-endpoint)
+and [authentication header](https://arize.com/docs/phoenix/deployment/authentication).
+
+## Check a complete trace
+
+In the intended Phoenix project, find the test run by time and service name.
+Open its trace tree and check the following evidence:
+
+| Check | Expected result |
+| --- | --- |
+| Agent parent | The run has a recognizable top-level agent or turn span when the capture path emits one. |
+| Model and tool work | Calls observed by Relay are children or related spans in the same trace. |
+| Privacy | Restricted prompt or tool fields are absent or transformed according to the approved policy. |
+
+If no trace appears, first check the intake URL, authorization, and reachability
+from the actual Relay process. If only model or tool activity is missing,
+confirm that those calls crossed the Relay capture boundary. The
+[Observability reference](/configure-plugins/observability/configuration)
+provides exporter delivery diagnostics.

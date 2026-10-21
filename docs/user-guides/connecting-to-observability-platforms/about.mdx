@@ -1,0 +1,92 @@
+---
+title: "Connecting to Observability Platforms"
+description: "Send Relay-observed agent, model, and tool activity to an existing tracing platform."
+position: 2
+---
+{/* SPDX-FileCopyrightText: Copyright (c) 2026, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+SPDX-License-Identifier: Apache-2.0 */}
+
+Connect a Relay-observed workload to the tracing platform your organization
+already operates. By the end, a real agent run should appear as a trace with
+its observed model calls and tool actions, under the intended service and
+project. The exporter can only send activity that Relay has captured.
+
+<CardGroup cols={2}>
+<Card title="Phoenix" icon="fa-solid fa-magnifying-glass" href="/user-guides/connecting-to-observability-platforms/phoenix">
+Use OpenInference spans in a Phoenix project.
+</Card>
+<Card title="LangSmith" icon="fa-solid fa-diagram-project" href="/user-guides/connecting-to-observability-platforms/langsmith">
+Route a trace to a LangSmith project with OTLP headers.
+</Card>
+<Card title="W&B Weave" icon="fa-solid fa-chart-line" href="/user-guides/connecting-to-observability-platforms/weave">
+Send GenAI spans to Weave's Agents view.
+</Card>
+<Card title="Datadog" icon="fa-solid fa-chart-simple" href="/user-guides/connecting-to-observability-platforms/datadog">
+Send traces through an Agent or Collector to Datadog.
+</Card>
+</CardGroup>
+
+## Choose the capture path
+
+Relay needs to see the run before it can export a useful trace. Match the
+capture path to the component that owns execution:
+
+| Workload | What Relay sees | Where the exporter runs |
+| --- | --- | --- |
+| Managed coding agents | A daemon keeps a shared local or remote entry point for supported harnesses such as Claude Code and Codex. Per-user workers handle provider traffic and supported lifecycle hooks while developers stay in their usual harness. Model calls that bypass the gateway are outside this capture path. | The per-user worker, using administrator-owned plugin configuration. |
+| Maintained framework integration | LangChain, LangGraph, and Deep Agents integrations wrap supported tool and model calls and attach those events to agent scopes. OpenClaw has hook-backed telemetry with narrower coverage. | The application process loading the integration. |
+| Instrumented application | Python, Node.js, or Rust code creates agent scopes and wraps the tool and model boundaries it owns. This is appropriate when your application controls those calls directly. | The instrumented application process. |
+
+Hermes Agent has its own native Relay integration. Check the
+[support matrix](/reference/support-matrix) for its current export path and for
+each harness's capture limits. The [daemon](/daemon/about),
+[framework integration](/supported-integrations/about), and
+[application instrumentation](/instrument-applications/about) sections provide
+deeper setup details after you choose the path.
+
+<Note>
+An exporter does not instrument a provider call or tool by itself. If a model
+or tool span is absent, first check that the run crossed a Relay-managed
+boundary. A successful model response from a daemon can also be pass-through;
+confirm worker-backed execution before accepting the trace.
+</Note>
+
+## Connect and verify
+
+<Steps>
+<Step title="Choose a representative run">
+Use an existing, non-sensitive agent task that calls a model and at least one
+tool. Record its approximate time, harness or service identity, and expected
+parent-child activity so you can recognize it in the destination.
+</Step>
+
+<Step title="Set the privacy and service boundary">
+Decide which prompt, response, and tool fields may leave the process. Apply
+Relay's [PII redaction policy](/configure-plugins/pii-redaction/about) to emitted
+telemetry before export. Give the OTLP trace a stable `service_name` that maps
+to your deployment, rather than a developer's local process name.
+</Step>
+
+<Step title="Configure one trace destination">
+In the worker or application process, enable the Observability plugin's
+OpenTelemetry trace endpoint. Choose `openinference` for Phoenix and LangSmith,
+or `gen_ai` for Weave's Agents view. For Datadog, the example uses
+`openinference`. Use the complete trace URL and the transport and headers shown
+in the destination subsection. Keep API keys in the deployment's secret store;
+Relay's `header_env` reads their values from the process environment.
+</Step>
+
+<Step title="Inspect the destination trace">
+Find the run by time and service. Confirm agent, model, and tool parentage,
+relevant model identity and token fields, and the expected redacted payload.
+If the run is absent, inspect exporter delivery and endpoint authorization. If
+only one activity type is absent, compare the trace with the source's actual
+capture coverage before changing the exporter.
+</Step>
+</Steps>
+
+Relay's [Observability configuration](/configure-plugins/observability/configuration)
+explains activation and delivery diagnostics. The
+[OpenTelemetry reference](/configure-plugins/observability/opentelemetry)
+documents all endpoint fields. Use the destination subsection for the concrete
+configuration and checks that complete this guide.
