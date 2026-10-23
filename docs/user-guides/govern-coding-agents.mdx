@@ -14,6 +14,40 @@ to activity it observes; the developer continues in Claude Code, Codex, or pi.
 A successful rollout produces an attributable, privacy-checked audit record for
 representative model and tool activity from each supported path.
 
+## Example: two users with a shared deployment
+
+The companion uses one Linux host with two independent operating-system
+accounts. **Alice runs Claude Code; Bob runs Codex CLI.** An administrator
+installs the Relay CLI as a system daemon, provisions the managed harness
+bundle, and owns the worker plugin configuration. Each user has a separate
+home, route credential, provider authentication, task repository, and worker.
+
+| Example participant | What runs there | Responsibility |
+| --- | --- | --- |
+| Administrator | Relay system service and immutable harness bundle | Distribute approved settings and plugin policy. |
+| Alice | Claude Code, MCP lifecycle client, and Alice's worker | Complete a coding task using her provider credentials. |
+| Bob | Codex CLI, MCP lifecycle client, and Bob's worker | Complete an independent task while Alice's session is active. |
+| Receiving tier | Phoenix, or your chosen OTLP destination | Inspect supported model/tool activity and redacted synthetic data. |
+
+<Card title="Run the two-user example on Brev or Linux" icon="fa-solid fa-code" href="https://github.com/exactlyallan/NeMo-Relay-ae/tree/codex/user-guide-coding-agents/docs/user-guides/_examples/coding-agents">
+Inspect the provisioning script, system service, shared policy, and session
+launcher. Use a fresh systemd VM and supply each user's provider authentication.
+</Card>
+
+<Note title="Example scope and alternatives">
+This demonstrates a shared-host deployment with real separate Linux users.
+Other supported coding harnesses and separate workstation deployments are
+possible. Brev only supplies the host; use the same artifacts on a comparable
+enterprise Linux host. Hermes uses a native in-process Relay integration and
+is a different setup from these managed daemon clients.
+</Note>
+
+Require two distinct ready workers and inspect their process owners while both
+sessions are open. Check the supported model and tool events in the receiving
+tier, then close Alice's session and confirm Bob can continue. Relay identities
+are routing identities; this example does not configure enterprise SSO or fleet
+provisioning. Use the topology and acceptance decisions below for that rollout.
+
 ## Decide what the deployment must cover
 
 The harness's provider request must pass through its Relay worker for model
@@ -48,51 +82,25 @@ plugin output are both visible.
 Place the approved `plugins.toml` in the client's system configuration so each
 managed worker receives the same policy. The following example redacts email
 addresses and API keys from supported emitted telemetry surfaces, then sends
-OpenInference traces to an organization-operated OTLP collector. Replace the
-illustrative endpoint and service name with your deployment values.
+OpenInference traces to a local Phoenix intake. Replace that endpoint with your
+organization-operated OTLP receiving tier and choose a service name that
+identifies your deployment.
 
-```toml
-version = 1
+<Code src="_examples/coding-agents/plugins.toml" language="toml" title="Shared worker plugins.toml" />
 
-[[components]]
-kind = "pii_redaction"
-enabled = true
+<Warning title="Synthetic example payloads">
+This companion enables payload export to inspect redaction of a synthetic email
+address. Use only the supplied synthetic task. Select permitted fields and
+payload settings before adapting the policy to production data.
+</Warning>
 
-[components.config]
-version = 1
+<Accordion title="Example system service">
+The system service runs under a dedicated account; workers run as Alice and
+Bob. `--require-worker` makes missing worker coverage visible as a failed
+request instead of silently accepting pass-through during the demonstration.
 
-[[components.config.profiles]]
-mode = "builtin"
-priority = 80
-
-[components.config.profiles.builtin]
-action = "redact"
-detector = "email"
-
-[[components.config.profiles]]
-mode = "builtin"
-priority = 90
-
-[components.config.profiles.builtin]
-action = "redact"
-detector = "api_key"
-
-[[components]]
-kind = "observability"
-enabled = true
-
-[components.config]
-version = 4
-
-[components.config.opentelemetry]
-enabled = true
-
-[[components.config.opentelemetry.endpoints]]
-type = "openinference"
-endpoint = "https://otel-gateway.example.com/v1/traces"
-transport = "http_binary"
-service_name = "coding-agents"
-```
+<Code src="_examples/coding-agents/nemo-relay.service" language="ini" title="nemo-relay.service" />
+</Accordion>
 
 Redaction applies to emitted observability data; it does not change the real
 provider conversation. Test it with representative prompts and tool results
