@@ -11,6 +11,33 @@ already operates. By the end, a real agent run should appear as a trace with
 its observed model calls and tool actions, under the intended service and
 project. The exporter can only send activity that Relay has captured.
 
+## Try a support-triage workload
+
+The companion example uses **Hermes Agent's native Relay integration** to read
+an incident queue, prioritize customer impact, and write a support handoff. Its
+model call and file tools create the activity you inspect in your destination.
+One runner and workload serve all four platforms; destination configuration is
+the part that changes.
+
+<Card title="Run the companion example on Brev or Linux" icon="fa-solid fa-code" href="https://github.com/exactlyallan/NeMo-Relay-ae/tree/codex/user-guide-observability/docs/user-guides/_examples/observability">
+Review the workload, exporter template, runner, and expected evidence. Use an
+ordinary CPU VM with an authenticated Hermes installation and a receiving tier.
+</Card>
+
+<Note title="Example choices">
+Hermes, Brev, and the synthetic incident queue make this example reproducible.
+You can use a managed coding agent, a supported framework integration, or your
+own instrumented application instead. Keep the destination configuration and
+trace checks, and confirm what that capture path actually observes. Hermes
+includes Relay in its process; this example does not wrap it with the Relay CLI.
+</Note>
+
+The example writes `handoff.md` and local ATOF events, and exports under service
+`relay-support-triage`. Inspect both the local events and the platform's trace
+tree: successful file output alone does not establish remote delivery. The
+companion README contains the run mechanics; the following sections guide the
+choices for your own deployment.
+
 <CardGroup cols={2}>
 <Card title="Phoenix" icon="fa-solid fa-magnifying-glass" href="/user-guides/connecting-to-observability-platforms/phoenix">
 Use OpenInference spans in a Phoenix project.
@@ -37,7 +64,7 @@ capture path to the component that owns execution:
 | Maintained framework integration | LangChain, LangGraph, and Deep Agents integrations wrap supported tool and model calls and attach those events to agent scopes. OpenClaw has hook-backed telemetry with narrower coverage. | The application process loading the integration. |
 | Instrumented application | Python, Node.js, or Rust code creates agent scopes and wraps the tool and model boundaries it owns. This is appropriate when your application controls those calls directly. | The instrumented application process. |
 
-Hermes Agent has its own native Relay integration. Check the
+Hermes Agent has its own native Relay integration, which the companion uses. Check the
 [support matrix](/reference/support-matrix) for its current export path and for
 each harness's capture limits. The [daemon](/daemon/about),
 [framework integration](/supported-integrations/about), and

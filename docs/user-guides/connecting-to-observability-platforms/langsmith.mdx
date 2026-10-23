@@ -11,6 +11,11 @@ to place Relay-observed work in a LangSmith project. Relay's `openinference`
 trace projection carries agent, model, and tool span attributes that LangSmith
 can map into its run view.
 
+<Tip title="Use the same companion workload">
+Select `--destination langsmith` in the parent guide's Hermes example. Supply the regional trace URL, `LANGSMITH_API_KEY`, and `LANGSMITH_PROJECT` in the runner environment.
+Find service `relay-support-triage` and apply this page's destination checks.
+</Tip>
+
 ## Select the LangSmith project
 
 Choose the LangSmith region, API key, and project before changing Relay. This

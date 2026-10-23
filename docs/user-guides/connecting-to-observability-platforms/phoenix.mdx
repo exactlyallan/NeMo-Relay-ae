@@ -11,6 +11,11 @@ to send a real Relay-observed run to Phoenix. Phoenix receives OpenTelemetry
 traces; Relay supplies the agent, model, and tool spans it captured. Use the
 `openinference` projection so Phoenix can identify those span roles.
 
+<Tip title="Use the same companion workload">
+Select `--destination phoenix` in the parent guide's Hermes example. Start a local Phoenix instance, or supply its remote trace URL and required authorization. The loopback endpoint is the default.
+Find service `relay-support-triage` and apply this page's destination checks.
+</Tip>
+
 ## Point the worker or application at Phoenix
 
 Choose the tracing intake URL for your Phoenix Cloud space or self-hosted
