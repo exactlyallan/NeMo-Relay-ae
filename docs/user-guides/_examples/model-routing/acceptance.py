@@ -35,7 +35,15 @@ def main():
         assert delays(5, 2, 7) == [2, 4, 7, 7, 7]
         assert delays(3, 0.5, 2) == [0.5, 1, 2]
         assert delays(2, 5, 2) == [2, 2]
-        for arguments in [(-1, 1, 10), (1.5, 1, 10), (True, 1, 10), (1, 0, 10), (1, 1, -1)]:
+        for arguments in [
+            (-1, 1, 10),
+            (1.5, 1, 10),
+            (True, 1, 10),
+            (1, 0, 10),
+            (1, 1, -1),
+            (1, "1", 10),
+            (1, None, 10),
+        ]:
             rejects(delays, *arguments)
     else:
         raise SystemExit("Unknown task")

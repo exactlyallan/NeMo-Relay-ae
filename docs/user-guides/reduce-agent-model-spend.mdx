@@ -1,5 +1,6 @@
 ---
 title: "Reduce Agent Model Spend Without Sacrificing Task Quality with Switchyard"
+sidebar-title: "Reduce Model Spend with Switchyard"
 description: "Evaluate fixed-model and Switchyard-routed agent tasks using quality, model selection, token usage, and latency."
 position: 7
 ---
@@ -12,6 +13,32 @@ plugin selects an answer model for requests addressed to a configured route ID.
 Relay owns the caller-facing boundary and exports the resulting telemetry.
 First establish that routing works and task quality holds; add monetary pricing
 when you have a credible basis for it.
+
+## What you'll compare
+
+Run two synthetic coding tasks through three model policies: always capable,
+always efficient, and Switchyard's classifier. Review accepted tasks, elapsed
+time, selected/served models, judge failures, and available token usage together.
+The example uses pi and remote NVIDIA inference on an ordinary CPU VM.
+
+```text
+pi → Relay gateway + Switchyard plugin → fixed target (baseline arms)
+                                    └→ judge → efficient or capable (routed arm)
+                     └→ local ATOF events → results.json + summary.json
+```
+
+## Prerequisites
+
+- Python 3.12, Node.js 24.13.1+, Git, and the
+  [pi quickstart](/getting-started/quick-start/pi) versions: pi **0.84.0** and
+  Relay CLI **0.11.0-rc.1**. The pi integration remains a proof of concept.
+- The public
+  [Switchyard plugin 0.3.2 release](https://github.com/NVIDIA/NeMo-Relay-Plugins/releases/tag/switchyard-plugin-0.3.2).
+  The Ubuntu x86_64 example downloads it without GitHub authentication.
+  Published Linux x86/Arm and macOS Arm bundles are available. Install only a
+  trusted native library; it executes inside Relay's process.
+- An [NVIDIA API key](https://build.nvidia.com/settings/api-keys) and access to
+  tool-capable answer models and a judge supporting JSON-object responses.
 
 ## Example: pi with NVIDIA model targets
 
@@ -28,7 +55,7 @@ tasks. Supply NVIDIA model access and a verified compatible plugin bundle.
 | Example choice | Purpose | Alternatives |
 | --- | --- | --- |
 | pi coding agent | Calls tools and sends supported OpenAI Chat Completions requests through Relay. | Another supported harness or an instrumented application with a compatible request path. |
-| NVIDIA-hosted Nemotron targets | Supply efficient and capable models plus a routing judge. Nano and Super are candidates; choose exact accessible model IDs after validation. | Other compatible providers or self-hosted NVIDIA inference. |
+| NVIDIA-hosted Nemotron targets | Supply efficient and capable models plus a routing judge. The published Nano Omni and Super IDs below are candidates; check access and behavior for your account. | Other compatible providers or self-hosted NVIDIA inference. |
 | Ordinary Brev CPU VM | Runs the harness, Relay, and local task checks while inference is remote. | A comparable Linux development or enterprise test host. |
 | Capability classifier | Selects the efficient or capable target from each request. | Another Switchyard algorithm that fits your workload. |
 
@@ -39,6 +66,66 @@ hook/provider support before adapting it. This disposable example uses a local
 CLI gateway. An administrator-managed deployment installs the plugin and policy
 in each worker's system configuration and uses the managed harness integration.
 </Note>
+
+<Tip title="Python on Brev Ubuntu">
+Check `python3.12 --version` before running. The default `python3` can still be
+3.10. If uv is installed, `uv python install 3.12` provides the required version;
+ensure its executable is on your PATH. The runner uses only the standard library.
+</Tip>
+
+<Note title="Pinned release candidate">
+The available 0.11 package is **0.11.0-rc.1**, a prerelease. The stable
+`0.11.0` download does not exist yet. Install the explicit tag for this preview:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/NVIDIA/NeMo-Relay/main/install.sh | NEMO_RELAY_VERSION=0.11.0-rc.1 sh
+export PATH="$HOME/.local/bin:$PATH"
+```
+
+Use your organization's approved release before a production rollout.
+</Note>
+
+## Run the optional comparison
+
+The [companion directory](https://github.com/exactlyallan/NeMo-Relay-ae/tree/codex/user-guide-model-cost/docs/user-guides/_examples/model-routing)
+is the review copy until the guide lands upstream. On your Linux CPU host or
+Brev instance (`brev shell YOUR_INSTANCE`), clone the branch and install the
+bundle into an unused directory:
+
+```bash
+git clone --branch codex/user-guide-model-cost --single-branch https://github.com/exactlyallan/NeMo-Relay-ae.git relay-routing
+cd relay-routing/docs/user-guides/_examples/model-routing
+SWITCHYARD_MANIFEST=$(bash install-plugin.sh /tmp/relay-switchyard-bundle)
+export SWITCHYARD_MANIFEST
+```
+
+The helper selects the pinned Linux x86_64 glibc asset and checks its SHA-256
+sidecar before extraction. For another supported platform, use the
+[Relay plugin installer](/configure-plugins/plugin-configuration-files) with
+`github:NVIDIA/NeMo-Relay-Plugins@switchyard-plugin-0.3.2` and an authenticated
+GitHub CLI, then set `SWITCHYARD_MANIFEST` to its installed manifest.
+
+Select your models and supply the API key through your approved secret store.
+For an interactive Bash session:
+
+```bash
+export NVIDIA_BASE_URL=https://integrate.api.nvidia.com/v1
+export EFFICIENT_MODEL=nvidia/nemotron-3-nano-omni-30b-a3b-reasoning
+export CAPABLE_MODEL=nvidia/nemotron-3-super-120b-a12b
+IFS= read -r -s -p 'NVIDIA API key: ' NVIDIA_API_KEY; printf '\n'
+export NVIDIA_API_KEY
+python3.12 run.py --output /tmp/relay-routing-comparison --repeat 3
+python3.12 summarize.py /tmp/relay-routing-comparison
+```
+
+The model IDs above are published candidates
+([Nano Omni](https://build.nvidia.com/nvidia/nemotron-3-nano-omni-30b-a3b-reasoning),
+[Super](https://build.nvidia.com/nvidia/nemotron-3-super-120b-a12b)), **not a
+live-validated pairing for this workload**. Substitute accessible models after
+checking tool support, context limits, and judge verdicts. `JUDGE_MODEL` defaults
+to the efficient model. Single trials are noisy; `--repeat 3` runs 18 tasks and
+rotates arm order between trials. API usage depends on the chosen models and
+number of calls. No GPU or monetary-cost claim is required for this comparison.
 
 ## Establish a comparable baseline
 
@@ -67,10 +154,10 @@ from the first comparison.
 
 Install a trusted, compatible Switchyard native-plugin bundle in the Relay
 process that handles model calls. The plugin is published separately; the
-current bundle requires Relay `>=0.10.0, <1.0.0`. Confirm that your team can
-obtain a matching bundle: published assets can require NVIDIA repository access.
-The documented source-build path is an alternative. Validate the artifact and
-its host architecture before loading it.
+pinned bundle requires Relay `>=0.10.0, <1.0.0`. Public release assets are
+available; the CLI selects the matching architecture. Validate the artifact and
+its publisher before loading it. Checksums establish integrity, not independent
+publisher authenticity.
 
 The following Relay entry points at the installed manifest and deployment file:
 
@@ -97,15 +184,16 @@ for bundle acquisition, verification, and activation.
 <Accordion title="The companion route template">
 The runner fills these placeholders from your endpoint and model choices. The
 judge defaults to the efficient model; confirm it supports a valid JSON-object
-routing verdict. The threshold is a starting point for evaluation, not a
-quality guarantee.
+routing verdict. Raising `base_threshold` sends more requests to the capable target. Start at
+0.8 and evaluate against task quality before changing it.
 
 <Code src="_examples/model-routing/routes.toml" language="toml" title="routes.toml" />
 </Accordion>
 
 pi needs a custom model-provider entry naming the virtual route, such as
 `switchyard/routed`; selecting a real NVIDIA model directly would skip the
-routing decision. The companion creates that entry in an isolated pi directory.
+routing decision. The companion creates that entry in an isolated pi directory and matches the
+gateway's `[upstream].openai_base_url` to the same NVIDIA endpoint.
 The native plugin obtains the actual NVIDIA credential from `NVIDIA_API_KEY`
 in the Relay process environment. It does not forward pi's placeholder
 credential to the selected target. The [route schema](https://nvidia-nemo.github.io/Switchyard/reference/toml_schema/)
@@ -143,6 +231,45 @@ your team needs to inspect the comparison centrally. See the
 [Switchyard telemetry contract](https://nvidia-nemo.github.io/Switchyard/integrations/nemo_relay/#routing-telemetry)
 for mark fields and the distinction between trace and metric views.
 
+## Read the scorecard
+
+`results.json` retains each task's arm, trial, exit status, acceptance result,
+and elapsed seconds. `summary.json` adds selected answer-call attempts, actual
+served model counts, judge errors, classifier recoveries, answer fallback flags, and answer/routing token totals.
+The terminal table has these columns:
+
+| Arm | Tasks accepted | Seconds | Efficient attempts | Capable attempts | Judge errors / classifier recovery / answer fallback | Answer tokens | Routing tokens |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| baseline / efficient / routed | Passed / attempted | Includes failed trials | Selected target calls | Selected target calls | Check unknown flags too | Total or unknown | Total or unknown |
+
+This describes the output schema; it is not measured model performance.
+Answer-call attempts can exceed task count. Inspect `served_models` separately:
+a selected model and the model that served the response can differ. Missing or
+partial usage stays **unknown**. The summarizer uses only `token_type=total`
+from `switchyard.routing.llm_tokens` metric marks, so it does not double-count
+input/output constituents. See the companion README for coverage limits.
+
+<Accordion title="Routing mark fields to inspect">
+Find a mark named `switchyard.routing.decision`. Its `data` includes
+`selected_model`, nullable `served_model`, nullable `fallback_used`, and
+`algorithm`. A `switchyard.routing.llm_call` mark identifies
+`call_role` (`routing` or `answer`), `selected_model`, and `outcome` (`ok` or
+`error`). Metric measurements use `call_role`, `target_model`, and `token_type`.
+An invalid judge verdict can recover to the capable model even with an `ok`
+HTTP call and `fallback_used=false`. Check `evidence.source` (`fail_open` or
+`fall_open` in 0.3.2) and `reason_code`; the summary records classifier recoveries
+separately. These are the pinned plugin's fields, not a captured example trace.
+</Accordion>
+
+<Note title="Limits of the example">
+The tasks and targets are example choices. Use a larger representative task set
+before changing production routing. The runner isolates pi and Relay user
+configuration, while administrator policy still applies. It is not a filesystem
+sandbox. Run trusted tasks on a disposable VM. Timeouts stop the task process
+group and preserve partial files; missing routing decisions fail the run's
+telemetry check. Successful acceptance alone does not establish routing quality.
+</Note>
+
 ## Add monetary comparison when ready
 
 When you have validated prices, combine Relay's answer cost with Switchyard
@@ -159,3 +286,15 @@ Exported routing metrics do not carry Relay request identity, so reconcile that
 cost at the workload or time-window level. The
 [model-pricing reference](/configure-plugins/model-pricing) explains how to supply
 prices when your provider omits them.
+
+## Cleanup and next steps
+
+After the runner stops, retain the task logs and scorecard you need, then remove
+only your chosen comparison output and dedicated bundle directory. The runner
+uses isolated plugin state, so no global plugin needs disabling. Leave other
+users' plugin installations and pi settings in place.
+
+Adapt the [route schema](https://nvidia-nemo.github.io/Switchyard/reference/toml_schema/)
+to your workload, or send comparison telemetry to your approved backend with
+[Observability configuration](/configure-plugins/observability/configuration).
+Add monetary pricing only when model/usage coverage and prices are verified.

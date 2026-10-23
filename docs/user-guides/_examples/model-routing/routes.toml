@@ -38,5 +38,6 @@ mode = "capability"
 classifier_target = "judge"
 strong_target = "capable"
 weak_target = "efficient"
+# Raising this threshold sends more requests to the capable target.
 base_threshold = 0.8
 response_format_type = "json_object"
