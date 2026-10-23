@@ -93,3 +93,13 @@ Use a clean host for this companion. The two-user coding-agent companion install
 system-wide plugin configuration; if it is present on the same host, its
 administrator policy can override this example's exporter or routing settings.
 Complete its cleanup before switching scenarios, or use separate VMs.
+
+## Measured Phoenix example
+
+On the Brev CPU VM, Hermes with `NVIDIA_BASE_URL=https://inference-api.nvidia.com/v1`
+and model `nvidia/nvidia/Nemotron-3-Nano-30B-A3B` completed the task in 70 seconds
+including startup. The log had one closed agent scope, four LLM calls, and two
+tool calls; Phoenix received all 12 exported spans in project `relay-support-triage`.
+This is an account-specific endpoint/model choice; credentials are environment
+values and are not part of the example files. Hosted backends require their own
+independent delivery verification.

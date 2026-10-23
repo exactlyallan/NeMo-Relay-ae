@@ -85,3 +85,12 @@ from the actual Relay process. If only model or tool activity is missing,
 confirm that those calls crossed the Relay capture boundary. The
 [Observability reference](/configure-plugins/observability/configuration)
 provides exporter delivery diagnostics.
+
+## Example trace to recognize
+
+The Brev companion run exported `hermes.session` (`AGENT`) and `hermes.turn`
+(`CHAIN`), with four `openai.chat_completions` (`LLM`) spans beneath logical-call
+spans and two tool spans named `read_file` and `write_file`. All 12 spans shared
+one trace ID in project `relay-support-triage`. See the parent guide's measured
+example and compare your own run time and tree rather than expecting these
+exact call counts from every model.

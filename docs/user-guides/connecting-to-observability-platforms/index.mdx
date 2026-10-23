@@ -117,6 +117,44 @@ uses GenAI operations described in its subsection. In Datadog APM, compare
 operation names and parent spans after your Collector's mapping. Model IDs and
 usage are present only when the source supplies them.
 
+## A measured Phoenix run
+
+On a Brev CPU VM, the companion completed in **70 seconds**, including Hermes
+startup. It used `https://inference-api.nvidia.com/v1` with the accessible model
+`nvidia/nvidia/Nemotron-3-Nano-30B-A3B`. This organization-configured endpoint and
+model are example choices; use your own authenticated provider where appropriate.
+The handoff placed the checkout outage before provisioning and the report delay.
+
+The local log contained **one closed agent scope, four model calls, and two tool
+calls**. Phoenix received all 12 exported spans in one trace under project
+`relay-support-triage`:
+
+```text
+hermes.session                           AGENT
+└─ hermes.turn                           CHAIN
+   ├─ hermes.logical_llm_call × 4         CHAIN
+   │  └─ openai.chat_completions          LLM (one per logical call)
+   ├─ read_file                          TOOL
+   └─ write_file                         TOOL
+```
+
+Model spans included the requested model identity and prompt/completion/total
+token counts. These observed counts describe this one task; they are not a
+performance target. Hosted destination verification remains a separate check.
+
+<Accordion title="Trimmed ATOF records from that run">
+Selected records are grouped by category, rather than event order. Only identity,
+parentage, name, category, and phase fields are shown. Intermediate
+function scopes explain why a model/tool record's immediate parent may differ
+from the agent UUID. Use the complete log to follow those ancestors.
+
+```jsonl
+{"kind":"scope","uuid":"01a16ac3-cb96-71f2-86f2-599dc3d81ad5","parent_uuid":"01a16ac3-cb96-71f2-86f2-597529a85244","name":"hermes.session","category":"agent","scope_category":"end"}
+{"kind":"scope","uuid":"01a16ac3-cdec-7b22-897e-c3175a9bbc44","parent_uuid":"01a16ac3-cdea-7f93-8d39-788cee130ddf","name":"openai.chat_completions","category":"llm","scope_category":"end"}
+{"kind":"scope","uuid":"01a16ac3-da4e-75f3-84ec-1ba93528815e","parent_uuid":"01a16ac3-cb97-7f30-942f-78e1d3748638","name":"read_file","category":"tool","scope_category":"end"}
+```
+</Accordion>
+
 ## Adapt to an existing deployment
 
 Relay needs to see the run before it can export a useful trace. Match the
