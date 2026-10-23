@@ -82,9 +82,23 @@ class SummaryChecks(unittest.TestCase):
             logs = output / "baseline/logs"
             logs.mkdir(parents=True)
             (logs / "events.jsonl").write_text("\n".join(map(json.dumps, [call, decision, metrics, metrics])))
+            with (logs / "events.jsonl").open("a") as stream:
+                stream.write(
+                    "\n"
+                    + json.dumps(
+                        {
+                            "uuid": "truncated",
+                            "kind": "scope",
+                            "category": "llm",
+                            "scope_category": "end",
+                            "category_profile": {"annotated_response": {"finish_reason": "length"}},
+                        }
+                    )
+                )
             with contextlib.redirect_stdout(io.StringIO()):
                 rows = summarize(output)
             self.assertEqual(rows[0]["tokens"]["answer"], 7)
+            self.assertEqual(rows[0]["truncated_calls"], 1)
             self.assertIsNone(rows[0]["tokens"]["routing"])
             self.assertEqual(rows[0]["served_models"], {"actual-large": 1})
             self.assertEqual(rows[0]["judge_errors"], 0)

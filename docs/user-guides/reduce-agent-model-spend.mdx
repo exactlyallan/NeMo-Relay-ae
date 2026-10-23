@@ -136,7 +136,10 @@ in your record. A larger model is not automatically better on your workload.
 
 The companion uses two small code changes in a service: normalize incident IDs
 and implement a capped retry policy. Each arm receives a fresh source scaffold;
-acceptance checks run outside the agent's working directory. Use a larger,
+acceptance checks run outside the agent's working directory. Each arm has the
+same `read`, `write`, and `bash` tools and a configurable 16384-token per-call
+output budget. Reasoning models can exhaust a smaller limit before editing code;
+review `truncated_calls` in the scorecard, even when pi exits zero. Use a larger,
 representative task set before changing a production policy.
 
 | Comparison arm | Switchyard behavior | What it establishes |
@@ -235,8 +238,8 @@ for mark fields and the distinction between trace and metric views.
 
 `results.json` retains each task's arm, trial, exit status, acceptance result,
 and elapsed seconds. `summary.json` adds selected answer-call attempts, actual
-served model counts, judge errors, classifier recoveries, answer fallback flags, and answer/routing token totals.
-The terminal table has these columns:
+served model counts, judge errors, classifier recoveries, answer fallback flags, truncated calls, and answer/routing token totals.
+The terminal table includes these fields; `summary.json` also records `truncated_calls`:
 
 | Arm | Tasks accepted | Seconds | Efficient attempts | Capable attempts | Judge errors / classifier recovery / answer fallback | Answer tokens | Routing tokens |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -269,6 +272,79 @@ sandbox. Run trusted tasks on a disposable VM. Timeouts stop the task process
 group and preserve partial files; missing routing decisions fail the run's
 telemetry check. Successful acceptance alone does not establish routing quality.
 </Note>
+
+## A measured comparison on Brev
+
+A six-task run used an account-accessible NVIDIA endpoint and these exact IDs:
+
+```bash
+export NVIDIA_BASE_URL=https://inference-api.nvidia.com/v1
+export EFFICIENT_MODEL=nvidia/nvidia/Nemotron-3-Nano-30B-A3B
+export CAPABLE_MODEL=nvidia/nvidia/nemotron-3-super-v3
+# JUDGE_MODEL defaulted to EFFICIENT_MODEL.
+python3.12 run.py --output /tmp/relay-routing-measured --repeat 1 --max-output-tokens 16384
+```
+
+Use these values only if your account can access them. They differ from the
+public NVIDIA catalogue's IDs. In this single trial, each arm passed the retry
+policy task and failed the ticket-ID task:
+
+| Arm | Accepted | Seconds | Nano / Super answer calls | Classifier recoveries | Answer tokens | Routing tokens |
+| --- | --- | --- | --- | --- | --- | --- |
+| baseline | 1/2 | 108.1 | 0 / 17 | 0 | 53,054 | No routing calls observed |
+| efficient | 1/2 | 52.3 | 16 / 0 | 0 | 69,682 | No routing calls observed |
+| routed | 1/2 | 152.2 | 7 / 8 | 6 | 46,536 | 39105 |
+
+All six agent processes exited zero, but the independent check rejected code
+that accepted Unicode numerals such as `INC-１２３４`. In one case the agent's
+own tests passed while its implementation used Python's Unicode-aware `\d`.
+The external acceptance checks remained unchanged. A trimmed `results.json`
+entry records that failure:
+
+```json
+{
+  "arm": "baseline",
+  "task": "ticket-id",
+  "trial": 1,
+  "agent_status": 0,
+  "accepted": false,
+  "seconds": 46.662
+}
+```
+
+The routed arm served requests with both targets. It also recorded six classifier
+recoveries: five `parse_error` and one `invalid_verdict`, despite zero judge HTTP
+call errors. Answer fallback flags were false and no answer calls were truncated
+in this run. Inspect classifier evidence as well as HTTP status and
+`fallback_used`. One actual decision mark, with its outer fields trimmed:
+
+```json
+{
+  "kind": "mark",
+  "name": "switchyard.routing.decision",
+  "data": {
+    "algorithm": "llm_task_classifier",
+    "evidence": {
+      "score": 0.85,
+      "source": "llm-classifier",
+      "threshold": 0.8
+    },
+    "fallback_used": false,
+    "outcome_id": "01a16ace-d9a6-7462-8034-05a7c489e482",
+    "selected_model": "nvidia/nvidia/Nemotron-3-Nano-30B-A3B",
+    "served_model": "nvidia/nvidia/Nemotron-3-Nano-30B-A3B"
+  }
+}
+```
+
+<Warning title="Interpret the quality gate">
+The comparison completed and produced a scorecard, then returned nonzero because
+tasks failed acceptance. This is the intended quality gate. Routing used 39,105
+additional judge tokens and took longer than either fixed-model arm in this run.
+These results do not establish savings or an acceptable production quality bar.
+Choose or tune a policy that meets your task requirements, then repeat on a
+larger workload before deployment. Failed trials remain part of the comparison.
+</Warning>
 
 ## Add monetary comparison when ready
 

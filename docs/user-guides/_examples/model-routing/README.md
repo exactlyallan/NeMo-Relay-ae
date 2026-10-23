@@ -37,7 +37,7 @@ Supply these variables through the launching environment:
 
 Select exact model IDs from your accessible endpoint. Nano and Super are
 candidates, not a tested pairing or a guaranteed quality ranking. Both targets
-must support pi's tools and a context of at least 32768 tokens with 4096 output
+must support pi's tools and a context of at least 32768 tokens with 16384 output
 tokens; adjust the generated `pi/models.json` limits for your actual models.
 The judge uses `json_object` and Switchyard's local schema validation. Confirm
 judge success in telemetry: failure can route every call to the capable model,
@@ -177,3 +177,36 @@ The generated `[upstream].openai_base_url` matches `NVIDIA_BASE_URL` in the
 Switchyard client and pi custom provider. Keep these aligned: older pi adapters
 only redirect providers that the gateway already fronts. A provider response
 that bypasses Relay does not verify the routing comparison.
+
+## Output budget and tool diagnostics
+
+The companion uses the same `read`, `write`, and `bash` tools for every arm and
+records pi's JSON event stream in each `agent.log`, including tool failures.
+This keeps the fixture focused on implementing and testing code with a fixed
+toolset. Other toolsets are possible; keep them identical across your comparison.
+
+The default per-call output budget is 16384 tokens, configurable with
+`--max-output-tokens`. It includes the provider's reasoning budget where
+applicable. An initial 4096-token run exhausted that budget and left code
+unfinished even though pi exited zero. The scorecard now counts model
+`finish_reason=length` or `max_tokens` as `truncated_calls`; review that count
+alongside task acceptance. A larger budget does not guarantee a better answer.
+The example caps this setting at 16384 to retain input space in its configured
+32768-token context. Adjust model limits together when adapting the fixture.
+
+## Measured run and expected nonzero exit
+
+The Brev comparison used `https://inference-api.nvidia.com/v1`, efficient/judge
+`nvidia/nvidia/Nemotron-3-Nano-30B-A3B`, capable
+`nvidia/nvidia/nemotron-3-super-v3`, `--repeat 1`, and `--max-output-tokens 16384`.
+Use those account-specific values only where accessible; the public catalogue
+uses different IDs. Every arm accepted the retry policy and rejected the ticket
+normalizer's Unicode-digit handling: 1/2 tasks accepted per arm. All agent exit
+codes were zero. The runner correctly returned nonzero for the rejected tasks.
+
+The measured routed arm used seven Nano and eight Super answer calls, with
+46,536 answer tokens and 39,105 routing tokens. Six classifier recoveries were
+reported (five parse errors, one invalid verdict). No monetary prices were
+applied. See the guide for the full scorecard and a real routing mark. A completed
+comparison can reject the proposed policy; the example does not guarantee that
+routing improves your workload or that any model satisfies every requirement.

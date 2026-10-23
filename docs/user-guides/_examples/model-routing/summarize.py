@@ -10,7 +10,7 @@ from collections import Counter
 from pathlib import Path
 
 
-def read_marks(path):
+def read_events(path):
     if not path.exists():
         return []
     marks = []
@@ -22,10 +22,10 @@ def read_marks(path):
             event = json.loads(line)
         except ValueError as error:
             raise ValueError(f"Malformed event at {path}:{number}: {error}") from None
-        if event.get("kind") != "mark":
-            continue
+
         # Repeated delivery of one mark must not inflate token or call totals.
         identity = event.get("uuid")
+        identity = (identity, event.get("kind"), event.get("scope_category")) if identity else None
         if identity and identity in seen:
             continue
         if identity:
@@ -41,7 +41,16 @@ def summarize(output):
     rows = []
     for arm in ("baseline", "efficient", "routed"):
         tasks = [task for task in results if task["arm"] == arm]
-        marks = read_marks(output / arm / "logs/events.jsonl")
+        events = read_events(output / arm / "logs/events.jsonl")
+        marks = [event for event in events if event.get("kind") == "mark"]
+        truncated = sum(
+            event.get("kind") == "scope"
+            and event.get("category") == "llm"
+            and event.get("scope_category") == "end"
+            and ((event.get("category_profile") or {}).get("annotated_response") or {}).get("finish_reason")
+            in {"length", "max_tokens"}
+            for event in events
+        )
         calls = [m.get("data") or {} for m in marks if m.get("name") in {"switchyard.routing.llm_call"}]
         decisions = [m.get("data") or {} for m in marks if m.get("name") == "switchyard.routing.decision"]
         by_model = Counter(c.get("selected_model") for c in calls if c.get("call_role") == "answer")
@@ -76,6 +85,7 @@ def summarize(output):
             "arm": arm,
             "accepted": sum(t["accepted"] for t in tasks),
             "tasks": len(tasks),
+            "truncated_calls": truncated,
             "seconds": round(sum(t["seconds"] for t in tasks), 3),
             "answer_attempts": dict(by_model),
             "decisions": len(decisions),
@@ -91,7 +101,7 @@ def summarize(output):
     (output / "summary.json").write_text(json.dumps(rows, indent=2) + "\n")
     print(
         "arm | accepted | seconds | efficient attempts | capable attempts | "
-        "judge errors / fail-open / answer fallbacks | answer tokens | routing tokens"
+        "judge errors / fail-open / answer fallbacks | truncated calls | answer tokens | routing tokens"
     )
     for row in rows:
         counts = row["answer_attempts"]
@@ -108,7 +118,7 @@ def summarize(output):
             f"{row['arm']} | {row['accepted']}/{row['tasks']} | {row['seconds']} | {efficient} | {capable} | "
             f"{row['judge_errors']}/{row['classifier_recoveries']}/{row['fallbacks']} "
             f"(unknown: {row['unknown_fallbacks']}) | "
-            f"{display(row['tokens']['answer'])} | {display(row['tokens']['routing'])}"
+            f"{row['truncated_calls']} | {display(row['tokens']['answer'])} | {display(row['tokens']['routing'])}"
         )
     print("Answer attempts are selected targets; served_models is in summary.json. Missing usage stays unknown.")
     return rows

@@ -53,7 +53,12 @@ def main():
     parser.add_argument("--prepare-only", action="store_true")
     parser.add_argument("--timeout", type=int, default=600, help="Seconds allowed for each task")
     parser.add_argument("--repeat", type=int, default=1, help="Fresh trials of each task in each arm")
+    parser.add_argument(
+        "--max-output-tokens", type=int, default=16384, help="Shared per-call output budget, including model reasoning"
+    )
     args = parser.parse_args()
+    if not 1 <= args.max_output_tokens <= 16384:
+        parser.error("--max-output-tokens must be between 1 and 16384 for this 32768-token example")
     if args.repeat <= 0:
         parser.error("--repeat must be positive")
     names = ["NVIDIA_BASE_URL", "EFFICIENT_MODEL", "CAPABLE_MODEL", "SWITCHYARD_MANIFEST"]
@@ -107,7 +112,7 @@ def main():
                 "reasoning": False,
                 "input": ["text"],
                 "contextWindow": 32768,
-                "maxTokens": 4096,
+                "maxTokens": args.max_output_tokens,
             }
             for arm in ["baseline", "efficient", "routed"]
         ],
@@ -185,8 +190,14 @@ attestation = "integrity_only"
                             "--model",
                             f"switchyard/{arm}",
                             "--no-session",
+                            "--mode",
+                            "json",
+                            "--tools",
+                            "read,write,bash",
                             "-p",
-                            prompt + " Use only local files and tools in this directory.",
+                            prompt + " Read service.py, implement the change with the available file tools, "
+                            "and run your tests. Use only local files and tools in this directory. "
+                            "Finish with a concise status.",
                         ],
                         cwd=task_dir,
                         env=environment,
