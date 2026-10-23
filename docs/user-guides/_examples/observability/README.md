@@ -10,7 +10,7 @@ required. Use a fresh directory for every run; the example creates its own files
 
 ## Prepare a host
 
-Use Python 3.11 or newer and a Hermes installation with native Relay support and
+Use Python 3.12 and a Hermes installation with native Relay support and
 `chat --oneshot`. Install and authenticate Hermes using its installation guide,
 select a tool-capable model, and inspect the NeMo Relay Plugins section of
 `hermes doctor`. Hermes owns its Relay dependency; installing the Relay CLI is
@@ -41,10 +41,10 @@ with `HERMES_NEMO_RELAY_PLUGINS_TOML` pointing to that file.
 
 ```bash
 # Inspect a generated configuration without calling a model or exporter.
-python3 run.py --destination phoenix --output /tmp/relay-triage-config --prepare-only
+python3.12 run.py --destination phoenix --output /tmp/relay-triage-config --prepare-only
 
 # After setting provider credentials and starting Phoenix:
-python3 run.py --destination phoenix --output /tmp/relay-triage-phoenix
+python3.12 run.py --destination phoenix --output /tmp/relay-triage-phoenix
 ```
 
 Select another destination with the same script and a new output directory.
@@ -53,7 +53,7 @@ The template renders secrets as environment references, never literal keys.
 ## Inspect the result
 
 The local check requires all three incident IDs in `handoff.md`, the checkout
-incident first, and model/tool scope events in `logs/events.jsonl`. Review the
+incident before the report delay, and correlated agent/model/tool scope events in `logs/events.jsonl`. Review the
 actual triage decisions as well: these checks do not grade every recommendation.
 In the destination UI, find service `relay-support-triage` at the run time and
 check the agent/model/tool parentage against those local events. Local output
@@ -65,6 +65,31 @@ In an enterprise deployment, replace Hermes with your supported capture path,
 the synthetic queue with your approved task, and the endpoint and service name
 with your receiving tier. Retain the same trace verification.
 
-## Proof-of-concept validation
 
-Configuration generation for all four destinations and local runner syntax have been checked. A live Hermes run and destination UI verification still require an authenticated model and receiving platform.
+## Installation, diagnostics, and cleanup
+
+Follow the [Hermes quickstart](https://docs.nvidia.com/nemo/relay/getting-started/quick-start/hermes)
+for installation and provider authentication. Confirm `hermes chat --help` lists
+`--oneshot`; in `hermes doctor`, inspect NeMo Relay Plugins for the selected user
+file and system-policy conflicts. Stop/restart only your dedicated profile's
+gateway after changing its environment; do not restart a shared gateway.
+
+Start a disposable Phoenix with `uvx --from arize-phoenix phoenix serve` in a
+separate terminal. On Brev, run the workload on the instance; on your computer,
+use `brev port-forward YOUR_INSTANCE --port 6006:6006` (add `--host` if needed).
+Use the same clone and run commands as on any Linux CPU host.
+
+Phoenix uses project and service `relay-support-triage`. For a private-network
+HTTP Collector, explicitly add `--allow-insecure-endpoint`; secrets and trace
+data can then travel unencrypted, so use it only on a trusted network. URLs with
+embedded credentials are rejected. The default timeout is 600 seconds; timeout
+stops the harness process group. Failures retain `agent.log` and any events.
+
+Stop only your own Phoenix process with Ctrl+C and close your port forward.
+Remove your chosen output directories when no longer needed; preserve shared
+backends. A local success message still requires a destination UI delivery check.
+
+Use a clean host for this companion. The two-user coding-agent companion installs
+system-wide plugin configuration; if it is present on the same host, its
+administrator policy can override this example's exporter or routing settings.
+Complete its cleanup before switching scenarios, or use separate VMs.

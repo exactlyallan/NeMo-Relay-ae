@@ -16,6 +16,19 @@ Select `--destination phoenix` in the parent guide's Hermes example. Start a loc
 Find service `relay-support-triage` and apply this page's destination checks.
 </Tip>
 
+## Start a local Phoenix instance
+
+For a disposable local backend, run this in a separate terminal and keep it open:
+
+```bash
+uvx --from arize-phoenix phoenix serve
+```
+
+The UI and HTTP trace intake use port `6006` by default. Follow the
+[Phoenix terminal deployment instructions](https://arize.com/docs/phoenix/self-hosting/deployment-options/terminal)
+for a persistent installation. For a remote VM, forward the port as described
+in the parent guide; an unauthenticated Phoenix UI should stay on a trusted host.
+
 ## Point the worker or application at Phoenix
 
 Choose the tracing intake URL for your Phoenix Cloud space or self-hosted
@@ -40,7 +53,10 @@ enabled = true
 type = "openinference"
 endpoint = "https://phoenix.example.com/v1/traces"
 transport = "http_binary"
-service_name = "relay-agents"
+service_name = "relay-support-triage"
+
+[components.config.opentelemetry.endpoints.resource_attributes]
+"openinference.project.name" = "relay-support-triage"
 
 [components.config.opentelemetry.endpoints.header_env]
 authorization = "PHOENIX_AUTHORIZATION"
@@ -55,7 +71,7 @@ and [authentication header](https://arize.com/docs/phoenix/deployment/authentica
 
 ## Check a complete trace
 
-In the intended Phoenix project, find the test run by time and service name.
+In the `relay-support-triage` Phoenix project, find the test run by time and service name.
 Open its trace tree and check the following evidence:
 
 | Check | Expected result |
