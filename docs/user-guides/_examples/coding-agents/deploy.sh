@@ -5,9 +5,16 @@
 # Provision a NEW disposable Linux host. Existing deployments need a planned merge.
 set -euo pipefail
 [[ $(id -u) == 0 ]] || { echo "Run as an administrator on a fresh example VM." >&2; exit 1; }
-[[ $# == 1 && -x $1 ]] || { echo "Usage: sudo bash deploy.sh /absolute/path/to/nemo-relay" >&2; exit 1; }
+[[ $# -ge 1 && $# -le 2 && -x $1 ]] || {
+    echo "Usage: sudo bash deploy.sh /absolute/path/to/nemo-relay [python3.11-or-newer]" >&2
+    exit 1
+}
+python_command=${2:-python3}
 source_dir=$(cd -- "$(dirname -- "$0")" && pwd)
-for tool in systemctl useradd runuser python3 git; do command -v "$tool" >/dev/null; done
+for tool in systemctl useradd runuser "$python_command" git install chmod cp cat; do
+    command -v "$tool" >/dev/null || { echo "Missing required tool: $tool" >&2; exit 1; }
+done
+"$python_command" -c 'import tomllib' || { echo "Python 3.11+ is required." >&2; exit 1; }
 [[ -d /run/systemd/system ]] || { echo "This example requires a Linux systemd host." >&2; exit 1; }
 for path in /etc/nemo-relay /opt/nvidia/bin/nemo-relay /opt/nvidia/share/nemo-relay-managed-v1 \
     /opt/nvidia/share/nemo-relay-codex-marketplace-v1 \
@@ -46,7 +53,19 @@ for account in alice bob; do
 done
 install -d -o bob -g bob -m 0700 /home/bob/.codex
 install -o bob -g bob -m 0600 /opt/nvidia/share/nemo-relay-managed-v1/codex/settings-v1/config.toml /home/bob/.codex/config.toml
-printf '\n[features]\nhooks = true\n' >> /home/bob/.codex/config.toml
+# The current generator omits [features]. Refuse future conflicting output before
+# changing the file instead of silently generating duplicate TOML tables.
+"$python_command" - <<'CONFIG'
+from pathlib import Path
+import tomllib
+path = Path("/home/bob/.codex/config.toml")
+text = path.read_text()
+if "features" in tomllib.loads(text):
+    raise SystemExit("Generated Codex config already has [features]; merge hooks=true before continuing.")
+text += "\n[features]\nhooks = true\n"
+tomllib.loads(text)
+path.write_text(text)
+CONFIG
 runuser -u nemo-relay -- env XDG_CONFIG_HOME=/var/lib/nemo-relay/.config \
     /opt/nvidia/bin/nemo-relay daemon tls-certificate > /etc/nemo-relay/hook-tls-certificate.pem
 chmod 644 /etc/nemo-relay/hook-tls-certificate.pem
