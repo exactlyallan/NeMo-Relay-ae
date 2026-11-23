@@ -31,6 +31,7 @@ mod provider_auth;
 mod server;
 mod sessions;
 mod upstream_auth;
+mod visualizer;
 
 #[cfg(test)]
 #[path = "../tests/coverage/shared/hook_assertions.rs"]

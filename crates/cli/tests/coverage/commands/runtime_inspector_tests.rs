@@ -106,7 +106,10 @@ async fn inspector_rejects_large_queries_before_attempting_transport() {
     let command = Inspector::try_parse_from(["inspect", "--query", &query])
         .unwrap()
         .command;
-    assert!(matches!(inspect(command).await, Err(CliError::Config(_))));
+    assert!(matches!(
+        inspect(command, &Default::default()).await,
+        Err(CliError::Config(_))
+    ));
 }
 
 #[tokio::test]
@@ -123,7 +126,7 @@ async fn inspector_reports_unavailable_for_gateway_and_daemon_worker_transport()
         ],
     ] {
         let command = Inspector::try_parse_from(args).unwrap().command;
-        let error = inspect(command).await.unwrap_err();
+        let error = inspect(command, &Default::default()).await.unwrap_err();
         assert!(
             error
                 .to_string()
@@ -283,4 +286,28 @@ async fn inspector_continues_http_pages_beyond_the_old_query_limit() {
         pages.push(page);
     }
     assert_ne!(pages[0].events[0].sequence, pages[1].events[0].sequence);
+}
+
+#[test]
+fn viewer_parser_keeps_raw_inspection_modes_separate() {
+    let command = Inspector::try_parse_from(["inspect", "--viewer", "--demo"])
+        .unwrap()
+        .command;
+    assert!(command.viewer && command.demo);
+    assert!(Inspector::try_parse_from(["inspect", "--demo"]).is_err());
+    for option in ["--memory", "--capabilities"] {
+        assert!(Inspector::try_parse_from(["inspect", "--viewer", option]).is_err());
+    }
+    assert!(Inspector::try_parse_from(["inspect", "--viewer", "--query", "{}"]).is_err());
+    assert!(
+        Inspector::try_parse_from([
+            "inspect",
+            "--viewer",
+            "--demo",
+            "--gateway-url",
+            "http://127.0.0.1:4040"
+        ])
+        .is_err()
+    );
+    assert!(Inspector::try_parse_from(["inspect", "--viewer", "--watch"]).is_err());
 }

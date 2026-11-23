@@ -48,6 +48,7 @@ bytes.workspace = true
 clap = { workspace = true, features = ["derive", "env"] }
 clap_complete.workspace = true
 console.workspace = true
+crossterm.workspace = true
 dialoguer = { workspace = true, features = ["password"] }
 dotenvy.workspace = true
 flate2.workspace = true
@@ -63,6 +64,7 @@ listeners.workspace = true
 log = { workspace = true, features = ["kv"] }
 percent-encoding.workspace = true
 rcgen.workspace = true
+ratatui.workspace = true
 regex.workspace = true
 reqwest = { workspace = true, features = ["charset", "http2", "json", "rustls", "stream"] }
 ring.workspace = true

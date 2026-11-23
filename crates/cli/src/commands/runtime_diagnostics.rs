@@ -13,6 +13,12 @@ const MAX_INSPECTOR_RESPONSE_BYTES: u32 = 32 * 1024 * 1024;
 
 #[derive(Debug, Clone, Args)]
 pub(crate) struct InspectCommand {
+    /// Open the read-only terminal viewer; refresh is controlled inside the viewer.
+    #[arg(long, conflicts_with_all = ["capabilities", "memory", "query"])]
+    viewer: bool,
+    /// Use labelled illustrative snapshots without connecting to a Relay listener.
+    #[arg(long, requires = "viewer", conflicts_with_all = ["gateway_url", "daemon_url", "worker", "max_response_bytes"])]
+    demo: bool,
     /// Existing local gateway address. Missing listeners are reported as unavailable.
     #[arg(long, default_value = crate::bootstrap::DEFAULT_URL)]
     gateway_url: String,
@@ -37,7 +43,10 @@ pub(crate) struct InspectCommand {
     ))]
     max_response_bytes: Option<u32>,
 }
-pub(crate) async fn inspect(command: InspectCommand) -> Result<ExitCode, CliError> {
+pub(crate) async fn inspect(
+    command: InspectCommand,
+    server: &super::serve::ServerArgs,
+) -> Result<ExitCode, CliError> {
     let max_bytes = command
         .max_response_bytes
         .unwrap_or(if command.worker.is_some() {
@@ -47,6 +56,19 @@ pub(crate) async fn inspect(command: InspectCommand) -> Result<ExitCode, CliErro
         });
     let daemon = command.daemon_url.is_some();
     let url = command.daemon_url.unwrap_or(command.gateway_url);
+    if command.viewer {
+        return crate::visualizer::run(
+            crate::visualizer::source::SnapshotSource {
+                url,
+                daemon,
+                worker: command.worker,
+                max_bytes: max_bytes as usize,
+                demo: command.demo,
+            },
+            server.to_runtime(),
+        )
+        .await;
+    }
     let mut path = command.worker.map_or_else(
         || crate::diagnostics_http::PREFIX.to_owned(),
         |worker| format!("/_nemo_relay/v1/workers/{worker}/diagnostics"),

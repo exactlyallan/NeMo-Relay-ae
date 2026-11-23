@@ -81,6 +81,75 @@ started with `--diagnostics-final`. Capture any required evidence with
    does not reconfigure that owner. Use the same local account with access to
    the gateway's private credentials.
 
+### Terminal Viewer (Proof of Concept)
+
+Open Relay Visualizer against the existing gateway:
+
+```bash
+nemo-relay diagnostics --viewer
+nemo-relay diagnostics --viewer --gateway-url http://127.0.0.1:4040
+```
+
+The overview answers three questions: **Am I connected?**, **Is work passing
+through Relay?**, and **What needs attention?** It reads the existing local health
+and worker-status endpoints for connection state, connected sessions, and current
+requests in flight. Sessions are connections, not a count of users or agents.
+A zero request count means no transport request at sample time; the agent may
+still be doing local work. Short requests may finish between polls.
+
+Model calls, tool calls, tokens, cost, and export delivery are not reported by
+these sources. Diagnostic recording totals are not work counts. Earlier recorded
+failures do not establish a current fault or prove recovery.
+
+**Details** preserves the diagnostic evidence, source coverage, retention, and
+cache freshness. These reads use the same pinned identity, operator credential,
+and read policy as JSON inspection. Public status does not grant diagnostic
+access; when diagnostics are denied or disabled, available connection status
+remains visible. The viewer does not start a listener, enable collection, or
+change the owner's configuration. Without `--viewer`, inspection keeps its
+existing JSON output and exit behavior.
+
+Automatic refresh starts at two seconds. Each read replaces the displayed
+snapshot; the viewer retains no timeline or snapshot history. Cadence controls
+reads only: a daemon worker cache may be older than the last successful read.
+Only one bounded read runs at a time. Details shows partial pages and source
+coverage; the viewer does not merge pages into a presumed complete inventory.
+A failed status read clears current activity rather than showing an old count.
+
+| Key | Action |
+| --- | --- |
+| `Space` | Pause or resume automatic refresh |
+| `+` / `-` | Set a 1, 2, 5, or 10 second interval |
+| `r` | Read the current runtime status and diagnostic snapshot |
+| `d` / `Tab` | Toggle diagnostic details |
+| `s` | Run Check setup; press again to rerun after completion |
+| Escape | Return to the overview; exit from the overview |
+| Arrows / Page Up / Page Down | Scroll the dashboard |
+| `j` / `k` | Scroll component or setup-check rows in details |
+| `q` / Ctrl+C | Exit the viewer |
+
+**Check setup** explicitly runs the existing offline Doctor report. The report
+identifies the local viewer account and describes that account's machine and
+configuration, not the selected worker or another user's agent installation.
+Polling and navigation never run Doctor. Doctor's offline checks can execute
+local version commands and temporary filesystem probes; they do not run its
+network probes. Raw diagnostic messages and credential values are not displayed.
+The proof of concept does not display diagnostic memory usage.
+
+Use `--daemon-url URL`, optionally with `--worker UUID`, for the existing
+authorized local daemon or cached-worker paths. Viewer mode cannot be combined
+with `--query`, `--capabilities`, or `--memory`.
+
+To try the layout without a running Relay instance, use the explicitly labelled
+illustrative mode. It connects to no listener and does not inspect local setup:
+
+```bash
+nemo-relay diagnostics --viewer --demo
+```
+
+From a source checkout, build with `just --set package_profile dev build-cli`
+and run `./target/debug/nemo-relay diagnostics --viewer --demo`.
+
 ### Apply Settings to an Existing Gateway
 
 Diagnostic settings are selected at startup. To change a persistent gateway:

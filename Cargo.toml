@@ -167,12 +167,14 @@ base64 = "0.22"
 clap = "4"
 clap_complete = "4"
 console = "0.16"
+crossterm = { version = "0.29", features = ["event-stream"] }
 const-hex = "1"
 dialoguer = { version = "0.12", default-features = false }
 dotenvy = "0.15.7"
 flate2 = "1"
 fs2 = "0.4"
 libloading = "0.8"
+ratatui = { version = "0.30.2", default-features = false, features = ["crossterm"] }
 sha2 = "0.11"
 shell-words = "1"
 tar = "0.4"

@@ -199,6 +199,49 @@ pub(crate) fn get_diagnostics(
     )
 }
 
+/// Read only the existing public status routes. These carry no diagnostic authority,
+/// credentials, or request payloads. Restricted evidence still uses `get_diagnostics`.
+pub(crate) fn get_visualizer_status(
+    url: &str,
+    path: &str,
+) -> Result<VerifiedHttpResponse, VerifiedHttpError> {
+    let worker_status = path
+        .strip_prefix("/_nemo_relay/v1/workers/")
+        .and_then(|value| value.strip_suffix("/status"))
+        .is_some_and(|value| value.parse::<uuid::Uuid>().is_ok());
+    if !matches!(path, "/healthz" | "/_nemo_relay/v1/workers/status") && !worker_status {
+        return Err(VerifiedHttpError::before_payload(
+            "invalid viewer status route",
+        ));
+    }
+    let (host, port) = parse_loopback_url(url).map_err(VerifiedHttpError::before_payload)?;
+    let timeout = Duration::from_secs(2);
+    let addresses = (host.as_str(), port)
+        .to_socket_addrs()
+        .map_err(|_| VerifiedHttpError::before_payload("status address unavailable"))?;
+    let mut stream = connect_loopback(addresses, timeout)
+        .map_err(|_| VerifiedHttpError::before_payload("status listener unavailable"))?;
+    stream
+        .set_read_timeout(Some(timeout))
+        .map_err(|error| VerifiedHttpError::before_payload(error.to_string()))?;
+    stream
+        .set_write_timeout(Some(timeout))
+        .map_err(|error| VerifiedHttpError::before_payload(error.to_string()))?;
+    let request = format!(
+        "GET {path} HTTP/1.1\r\nHost: {}\r\nConnection: close\r\n\r\n",
+        loopback_authority(&host, port)
+    );
+    stream
+        .write_all(request.as_bytes())
+        .map_err(|_| VerifiedHttpError::before_payload("status request failed"))?;
+    let (headers, body) = read_http_message(&mut stream, 256 * 1024).map_err(|_| {
+        VerifiedHttpError::before_payload("status response unavailable or too large")
+    })?;
+    let status = http_status(&headers)
+        .ok_or_else(|| VerifiedHttpError::before_payload("invalid status response"))?;
+    Ok(VerifiedHttpResponse { status, body })
+}
+
 #[allow(clippy::too_many_arguments)]
 fn post_authenticated(
     url: &str,

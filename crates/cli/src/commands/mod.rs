@@ -374,7 +374,7 @@ async fn run_command(
     bootstrap_shutdown_token: Option<String>,
 ) -> Result<ExitCode, error::CliError> {
     match command {
-        Command::Diagnostics(command) => runtime_diagnostics::inspect(command).await,
+        Command::Diagnostics(command) => runtime_diagnostics::inspect(command, server).await,
         Command::Daemon(command) => daemon::execute(command, server).await,
         Command::HookForward(command) => {
             hook_forward::execute(command).await?;
