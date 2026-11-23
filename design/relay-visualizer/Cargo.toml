@@ -1,0 +1,14 @@
+# SPDX-FileCopyrightText: Copyright (c) 2026, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+[package]
+name = "relay-visualizer-design"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+ratatui = { version = "=0.30.2", default-features = false, features = ["crossterm"] }
+crossterm = "0.29"
+serde_json = "1"
+
+[workspace]
